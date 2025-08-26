@@ -1,0 +1,130 @@
+-- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rclcpp: 16.0.14 (/opt/ros/humble/share/rclcpp/cmake)
+-- Found rosidl_generator_c: 3.1.7 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.7 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.8 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+-- Found nav_msgs: 4.9.0 (/opt/ros/humble/share/nav_msgs/cmake)
+-- Found tf2: 0.25.16 (/opt/ros/humble/share/tf2/cmake)
+-- Found tf2_ros: 0.25.16 (/opt/ros/humble/share/tf2_ros/cmake)
+-- Found tf2_geometry_msgs: 0.25.16 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)
+-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+-- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+-- Found pluginlib: 5.1.0 (/opt/ros/humble/share/pluginlib/cmake)
+-- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/include
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'cpplint' to check C / C++ code against the Google style
+-- Configured cpplint exclude dirs and/or files: 
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+-- Added test 'uncrustify' to check C / C++ code style
+-- Configured uncrustify additional arguments: 
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2
+[35m[1mConsolidate compiler generated dependencies of target sc_mini_ros2[0m
+[ 33%] [32mBuilding CXX object CMakeFiles/sc_mini_ros2.dir/src/sc_mini_ros2.cpp.o[0m
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:42:24:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KEaiDataStr::BufferStart[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+   42 | EaiDataStr EaiData = {0[01;35m[K}[m[K;
+      |                        [01;35m[K^[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:42:24:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KEaiDataStr::BufferLen[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kvoid sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:118:51:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kx4[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  118 |                 float x0,y0, x1,y1, x2,y2, x3,y3, [01;35m[Kx4[m[K,y4, r1, r2;
+      |                                                   [01;35m[K^~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:118:54:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Ky4[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  118 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,[01;35m[Ky4[m[K, r1, r2;
+      |                                                      [01;35m[K^~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:121:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStrBuf[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  121 |                 char [01;35m[KStrBuf[m[K[100];
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kvoid sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:332:31:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  332 |                 int temp_i, i,[01;35m[Kangle[m[K,temp_Size;
+      |                               [01;35m[K^~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:333:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Km_fAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  333 |                 float [01;35m[Km_fAngle[m[K;
+      |                       [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kint sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:381:21:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kindex[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  381 |                 int [01;35m[Kindex[m[K;
+      |                     [01;35m[K^~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:382:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KFrameOK[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  382 |                 bool [01;35m[KFrameOK[m[K = false;
+      |                      [01;35m[K^~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:383:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStrBuf[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  383 |                 char [01;35m[KStrBuf[m[K[100];
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:384:21:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KCheckFlag[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  384 |                 int [01;35m[KCheckFlag[m[K=0;//
+      |                     [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:385:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KWaitOneFrame[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  385 |                 bool [01;35m[KWaitOneFrame[m[K = true;
+      |                      [01;35m[K^~~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:387:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KZoneNo[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  387 |                 char [01;35m[KZoneNo[m[K;
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:388:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KSampleNumber[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  388 |                 char [01;35m[KSampleNumber[m[K;
+      |                      [01;35m[K^~~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:389:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KAngle_fsa[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  389 |                 float [01;35m[KAngle_fsa[m[K, Angle_lsa;
+      |                       [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:389:34:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KAngle_lsa[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  389 |                 float Angle_fsa, [01;35m[KAngle_lsa[m[K;
+      |                                  [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:390:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStartAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  390 |                 short [01;35m[KStartAngle[m[K;
+      |                       [01;35m[K^~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:391:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStopAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  391 |                 short [01;35m[KStopAngle[m[K;
+      |                       [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:396:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_check[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  396 |                 float [01;35m[Kangle_check[m[K;
+      |                       [01;35m[K^~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:397:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_c0[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  397 |                 float [01;35m[Kangle_c0[m[K,angle_c1;
+      |                       [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:397:32:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_c1[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  397 |                 float angle_c0,[01;35m[Kangle_c1[m[K;
+      |                                [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:375:75:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kfd[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+  375 |   int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,[01;35m[Kint fd[m[K)
+      |                                                                 [01;35m[K~~~~^~[m[K
+
+[ 66%] [32m[1mLinking CXX executable sc_mini_ros2[0m
+[100%] Built target sc_mini_ros2
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/lib/sc_mini_ros2/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/rviz.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start_tf.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//rviz/sc_m.rviz
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//sc_mini.rules
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/package_run_dependencies/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/parent_prefix_path/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.bash
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.zsh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.dsv
+-- Symlinking: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/packages/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config.cmake
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config-version.cmake
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.xml

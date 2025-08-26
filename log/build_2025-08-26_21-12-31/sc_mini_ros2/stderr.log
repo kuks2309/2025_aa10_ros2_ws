@@ -1,0 +1,61 @@
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferStart’ [-Wmissing-field-initializers]
+   43 | EaiDataStr EaiData = {0};
+      |                        ^
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferLen’ [-Wmissing-field-initializers]
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:51: warning: unused variable ‘x4’ [-Wunused-variable]
+  105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+      |                                                   ^~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:54: warning: unused variable ‘y4’ [-Wunused-variable]
+  105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+      |                                                      ^~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:108:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+  108 |                 char StrBuf[100];
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:314:31: warning: unused variable ‘angle’ [-Wunused-variable]
+  314 |                 int temp_i, i,angle,temp_Size;
+      |                               ^~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:315:23: warning: unused variable ‘m_fAngle’ [-Wunused-variable]
+  315 |                 float m_fAngle;
+      |                       ^~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘int sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:353:21: warning: unused variable ‘index’ [-Wunused-variable]
+  353 |                 int index;
+      |                     ^~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:354:22: warning: unused variable ‘FrameOK’ [-Wunused-variable]
+  354 |                 bool FrameOK = false;
+      |                      ^~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:355:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+  355 |                 char StrBuf[100];
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:356:21: warning: unused variable ‘CheckFlag’ [-Wunused-variable]
+  356 |                 int CheckFlag=0;
+      |                     ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:357:22: warning: unused variable ‘WaitOneFrame’ [-Wunused-variable]
+  357 |                 bool WaitOneFrame = true;
+      |                      ^~~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:359:22: warning: unused variable ‘ZoneNo’ [-Wunused-variable]
+  359 |                 char ZoneNo;
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:360:22: warning: unused variable ‘SampleNumber’ [-Wunused-variable]
+  360 |                 char SampleNumber;
+      |                      ^~~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:23: warning: unused variable ‘Angle_fsa’ [-Wunused-variable]
+  361 |                 float Angle_fsa, Angle_lsa;
+      |                       ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:34: warning: unused variable ‘Angle_lsa’ [-Wunused-variable]
+  361 |                 float Angle_fsa, Angle_lsa;
+      |                                  ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:362:23: warning: unused variable ‘StartAngle’ [-Wunused-variable]
+  362 |                 short StartAngle;
+      |                       ^~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:363:23: warning: unused variable ‘StopAngle’ [-Wunused-variable]
+  363 |                 short StopAngle;
+      |                       ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:368:23: warning: unused variable ‘angle_check’ [-Wunused-variable]
+  368 |                 float angle_check;
+      |                       ^~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:347:75: warning: unused parameter ‘fd’ [-Wunused-parameter]
+  347 |         int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int fd)
+      |                                                                       ~~~~^~

@@ -1,0 +1,1 @@
+/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2/ament_cmake_environment_hooks/local_setup.bash

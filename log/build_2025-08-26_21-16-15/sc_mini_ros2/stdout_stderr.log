@@ -1,0 +1,88 @@
+Consolidate compiler generated dependencies of target sc_mini_ros2
+[ 33%] Building CXX object CMakeFiles/sc_mini_ros2.dir/src/sc_mini_ros2.cpp.o
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferStart’ [-Wmissing-field-initializers]
+   43 | EaiDataStr EaiData = {0};
+      |                        ^
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferLen’ [-Wmissing-field-initializers]
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:107:51: warning: unused variable ‘x4’ [-Wunused-variable]
+  107 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+      |                                                   ^~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:107:54: warning: unused variable ‘y4’ [-Wunused-variable]
+  107 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+      |                                                      ^~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:110:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+  110 |                 char StrBuf[100];
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:316:31: warning: unused variable ‘angle’ [-Wunused-variable]
+  316 |                 int temp_i, i,angle,temp_Size;
+      |                               ^~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:317:23: warning: unused variable ‘m_fAngle’ [-Wunused-variable]
+  317 |                 float m_fAngle;
+      |                       ^~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘int sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)’:
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:358:21: warning: unused variable ‘index’ [-Wunused-variable]
+  358 |                 int index;
+      |                     ^~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:359:22: warning: unused variable ‘FrameOK’ [-Wunused-variable]
+  359 |                 bool FrameOK = false;
+      |                      ^~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:360:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+  360 |                 char StrBuf[100];
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:21: warning: unused variable ‘CheckFlag’ [-Wunused-variable]
+  361 |                 int CheckFlag=0;
+      |                     ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:362:22: warning: unused variable ‘WaitOneFrame’ [-Wunused-variable]
+  362 |                 bool WaitOneFrame = true;
+      |                      ^~~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:364:22: warning: unused variable ‘ZoneNo’ [-Wunused-variable]
+  364 |                 char ZoneNo;
+      |                      ^~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:365:22: warning: unused variable ‘SampleNumber’ [-Wunused-variable]
+  365 |                 char SampleNumber;
+      |                      ^~~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:366:23: warning: unused variable ‘Angle_fsa’ [-Wunused-variable]
+  366 |                 float Angle_fsa, Angle_lsa;
+      |                       ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:366:34: warning: unused variable ‘Angle_lsa’ [-Wunused-variable]
+  366 |                 float Angle_fsa, Angle_lsa;
+      |                                  ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:367:23: warning: unused variable ‘StartAngle’ [-Wunused-variable]
+  367 |                 short StartAngle;
+      |                       ^~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:368:23: warning: unused variable ‘StopAngle’ [-Wunused-variable]
+  368 |                 short StopAngle;
+      |                       ^~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:373:23: warning: unused variable ‘angle_check’ [-Wunused-variable]
+  373 |                 float angle_check;
+      |                       ^~~~~~~~~~~
+/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:352:75: warning: unused parameter ‘fd’ [-Wunused-parameter]
+  352 |         int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int fd)
+      |                                                                       ~~~~^~
+[ 66%] Linking CXX executable sc_mini_ros2
+[100%] Built target sc_mini_ros2
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/lib/sc_mini_ros2/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/rviz.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start_tf.launch.py
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//rviz/sc_m.rviz
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//sc_mini.rules
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/package_run_dependencies/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/parent_prefix_path/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.bash
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.sh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.zsh
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.dsv
+-- Symlinking: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.dsv
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/packages/sc_mini_ros2
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config.cmake
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config-version.cmake
+-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.xml

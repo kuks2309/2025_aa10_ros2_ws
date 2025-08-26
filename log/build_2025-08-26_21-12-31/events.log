@@ -1,0 +1,350 @@
+[0.000000] (-) TimerEvent: {}
+[0.004066] (sc_mini_ros2) JobQueued: {'identifier': 'sc_mini_ros2', 'dependencies': OrderedDict()}
+[0.004247] (sc_mini_ros2) JobStarted: {'identifier': 'sc_mini_ros2'}
+[0.040455] (sc_mini_ros2) JobProgress: {'identifier': 'sc_mini_ros2', 'progress': 'cmake'}
+[0.056902] (sc_mini_ros2) JobProgress: {'identifier': 'sc_mini_ros2', 'progress': 'build'}
+[0.068818] (sc_mini_ros2) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2', '--', '-j4', '-l4'], 'cwd': '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'amap'), ('CLAUDE_CODE_ENTRYPOINT', 'cli'), ('GIT_EDITOR', 'true'), ('XDG_SESSION_TYPE', 'x11'), ('GIT_ASKPASS', '/usr/share/code/resources/app/extensions/git/dist/askpass.sh'), ('SHLVL', '3'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/amap'), ('CHROME_DESKTOP', 'code.desktop'), ('TERM_PROGRAM_VERSION', '1.103.2'), ('DESKTOP_SESSION', 'ubuntu-xorg'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('VSCODE_GIT_ASKPASS_MAIN', '/usr/share/code/resources/app/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/usr/share/code/code'), ('PYDEVD_DISABLE_FILE_VALIDATION', '1'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1004'), ('BUNDLED_DEBUGPY_PATH', '/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/bundled/libs/debugpy'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=596032d9f13f67e8bcc48e2968ad99b9'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'fcitx'), ('LOGNAME', 'amap'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('CLAUDE_CODE_SSE_PORT', '52102'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'amap'), ('TERM', 'xterm-256color'), ('OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE', 'delta'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/amap/.npm-global/bin:/opt/ros/humble/bin:/home/amap/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/bundled/scripts/noConfigScripts'), ('SESSION_MANAGER', 'local/amap:@/tmp/.ICE-unix/1004,unix/amap:/tmp/.ICE-unix/1004'), ('COREPACK_ENABLE_AUTO_PIN', '0'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/0162bcf1_f389_42e3_b80e_729200d05bc5'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('GDK_BACKEND', 'x11'), ('DISPLAY', ':0'), ('VSCODE_DEBUGPY_ADAPTER_ENDPOINTS', '/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/.noConfigDebugAdapterEndpoints/endpoint-80cec8b5f95d2c8b.txt'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'Unity'), ('XMODIFIERS', '@im=fcitx'), ('XDG_SESSION_DESKTOP', 'ubuntu-xorg'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-47e6434fae.sock'), ('GNOME_TERMINAL_SERVICE', ':1.95'), ('TERM_PROGRAM', 'vscode'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2:/opt/ros/humble'), ('ORIGINAL_XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu-xorg'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('CLAUDECODE', '1'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('QT_IM_MODULE', 'fcitx'), ('PWD', '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2'), ('ENABLE_IDE_INTEGRATION', 'true'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu-xorg:/etc/xdg'), ('CLUTTER_IM_MODULE', 'xim'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=596032d9f13f67e8bcc48e2968ad99b9'), ('XDG_DATA_DIRS', '/usr/share/ubuntu-xorg:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2:/opt/ros/humble')]), 'shell': False}
+[0.105716] (-) TimerEvent: {}
+[0.210809] (-) TimerEvent: {}
+[0.311350] (-) TimerEvent: {}
+[0.415507] (-) TimerEvent: {}
+[0.434507] (sc_mini_ros2) StdoutLine: {'line': b'Consolidate compiler generated dependencies of target sc_mini_ros2\n'}
+[0.486728] (sc_mini_ros2) StdoutLine: {'line': b'[ 33%] Building CXX object CMakeFiles/sc_mini_ros2.dir/src/sc_mini_ros2.cpp.o\n'}
+[0.518175] (-) TimerEvent: {}
+[0.618620] (-) TimerEvent: {}
+[0.719222] (-) TimerEvent: {}
+[0.819741] (-) TimerEvent: {}
+[0.921243] (-) TimerEvent: {}
+[1.021583] (-) TimerEvent: {}
+[1.122756] (-) TimerEvent: {}
+[1.224050] (-) TimerEvent: {}
+[1.325462] (-) TimerEvent: {}
+[1.428727] (-) TimerEvent: {}
+[1.529700] (-) TimerEvent: {}
+[1.630305] (-) TimerEvent: {}
+[1.730828] (-) TimerEvent: {}
+[1.832076] (-) TimerEvent: {}
+[1.933956] (-) TimerEvent: {}
+[2.034746] (-) TimerEvent: {}
+[2.137322] (-) TimerEvent: {}
+[2.237644] (-) TimerEvent: {}
+[2.337931] (-) TimerEvent: {}
+[2.438239] (-) TimerEvent: {}
+[2.538754] (-) TimerEvent: {}
+[2.640626] (-) TimerEvent: {}
+[2.742384] (-) TimerEvent: {}
+[2.850538] (-) TimerEvent: {}
+[2.950865] (-) TimerEvent: {}
+[3.051194] (-) TimerEvent: {}
+[3.151500] (-) TimerEvent: {}
+[3.251796] (-) TimerEvent: {}
+[3.352204] (-) TimerEvent: {}
+[3.452732] (-) TimerEvent: {}
+[3.556263] (-) TimerEvent: {}
+[3.656726] (-) TimerEvent: {}
+[3.757742] (-) TimerEvent: {}
+[3.860836] (-) TimerEvent: {}
+[3.962689] (-) TimerEvent: {}
+[4.062982] (-) TimerEvent: {}
+[4.163688] (-) TimerEvent: {}
+[4.264994] (-) TimerEvent: {}
+[4.367555] (-) TimerEvent: {}
+[4.468543] (-) TimerEvent: {}
+[4.569098] (-) TimerEvent: {}
+[4.669989] (-) TimerEvent: {}
+[4.770846] (-) TimerEvent: {}
+[4.871449] (-) TimerEvent: {}
+[4.971739] (-) TimerEvent: {}
+[5.073099] (-) TimerEvent: {}
+[5.173831] (-) TimerEvent: {}
+[5.274806] (-) TimerEvent: {}
+[5.375231] (-) TimerEvent: {}
+[5.475814] (-) TimerEvent: {}
+[5.576351] (-) TimerEvent: {}
+[5.676703] (-) TimerEvent: {}
+[5.777277] (-) TimerEvent: {}
+[5.879720] (-) TimerEvent: {}
+[5.981150] (-) TimerEvent: {}
+[6.082138] (-) TimerEvent: {}
+[6.182683] (-) TimerEvent: {}
+[6.283604] (-) TimerEvent: {}
+[6.385334] (-) TimerEvent: {}
+[6.488525] (-) TimerEvent: {}
+[6.588891] (-) TimerEvent: {}
+[6.689267] (-) TimerEvent: {}
+[6.790109] (-) TimerEvent: {}
+[6.891567] (-) TimerEvent: {}
+[6.993141] (-) TimerEvent: {}
+[7.093486] (-) TimerEvent: {}
+[7.193974] (-) TimerEvent: {}
+[7.295120] (-) TimerEvent: {}
+[7.395831] (-) TimerEvent: {}
+[7.496890] (-) TimerEvent: {}
+[7.598497] (-) TimerEvent: {}
+[7.702065] (-) TimerEvent: {}
+[7.803824] (-) TimerEvent: {}
+[7.904938] (-) TimerEvent: {}
+[8.009678] (-) TimerEvent: {}
+[8.110244] (-) TimerEvent: {}
+[8.211067] (-) TimerEvent: {}
+[8.314506] (-) TimerEvent: {}
+[8.415786] (-) TimerEvent: {}
+[8.517703] (-) TimerEvent: {}
+[8.619035] (-) TimerEvent: {}
+[8.720680] (-) TimerEvent: {}
+[8.821177] (-) TimerEvent: {}
+[8.922490] (-) TimerEvent: {}
+[9.023611] (-) TimerEvent: {}
+[9.124708] (-) TimerEvent: {}
+[9.225017] (-) TimerEvent: {}
+[9.326146] (-) TimerEvent: {}
+[9.426567] (-) TimerEvent: {}
+[9.527451] (-) TimerEvent: {}
+[9.627784] (-) TimerEvent: {}
+[9.728395] (-) TimerEvent: {}
+[9.830392] (-) TimerEvent: {}
+[9.930932] (-) TimerEvent: {}
+[10.034538] (-) TimerEvent: {}
+[10.135112] (-) TimerEvent: {}
+[10.235789] (-) TimerEvent: {}
+[10.336945] (-) TimerEvent: {}
+[10.437971] (-) TimerEvent: {}
+[10.538315] (-) TimerEvent: {}
+[10.638775] (-) TimerEvent: {}
+[10.739272] (-) TimerEvent: {}
+[10.840175] (-) TimerEvent: {}
+[10.940792] (-) TimerEvent: {}
+[11.041382] (-) TimerEvent: {}
+[11.143637] (-) TimerEvent: {}
+[11.247453] (-) TimerEvent: {}
+[11.349935] (-) TimerEvent: {}
+[11.450293] (-) TimerEvent: {}
+[11.552637] (-) TimerEvent: {}
+[11.653277] (-) TimerEvent: {}
+[11.753803] (-) TimerEvent: {}
+[11.857263] (-) TimerEvent: {}
+[11.958101] (-) TimerEvent: {}
+[12.058464] (-) TimerEvent: {}
+[12.158865] (-) TimerEvent: {}
+[12.260566] (-) TimerEvent: {}
+[12.360868] (-) TimerEvent: {}
+[12.461356] (-) TimerEvent: {}
+[12.561808] (-) TimerEvent: {}
+[12.665821] (-) TimerEvent: {}
+[12.772832] (-) TimerEvent: {}
+[12.873891] (-) TimerEvent: {}
+[12.975139] (-) TimerEvent: {}
+[13.078338] (-) TimerEvent: {}
+[13.144887] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member \xe2\x80\x98EaiDataStr::BufferStart\xe2\x80\x99 [-Wmissing-field-initializers]\n'}
+[13.145382] (sc_mini_ros2) StderrLine: {'line': b'   43 | EaiDataStr EaiData = {0};\n'}
+[13.145670] (sc_mini_ros2) StderrLine: {'line': b'      |                        ^\n'}
+[13.145894] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member \xe2\x80\x98EaiDataStr::BufferLen\xe2\x80\x99 [-Wmissing-field-initializers]\n'}
+[13.168547] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function \xe2\x80\x98void sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)\xe2\x80\x99:\n'}
+[13.169505] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:51: warning: unused variable \xe2\x80\x98x4\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.169895] (sc_mini_ros2) StderrLine: {'line': b'  105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;\n'}
+[13.171582] (sc_mini_ros2) StderrLine: {'line': b'      |                                                   ^~\n'}
+[13.171875] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:54: warning: unused variable \xe2\x80\x98y4\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.172143] (sc_mini_ros2) StderrLine: {'line': b'  105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;\n'}
+[13.172394] (sc_mini_ros2) StderrLine: {'line': b'      |                                                      ^~\n'}
+[13.172742] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:108:22: warning: unused variable \xe2\x80\x98StrBuf\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.172990] (sc_mini_ros2) StderrLine: {'line': b'  108 |                 char StrBuf[100];\n'}
+[13.173229] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~\n'}
+[13.174431] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function \xe2\x80\x98void sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)\xe2\x80\x99:\n'}
+[13.176885] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:314:31: warning: unused variable \xe2\x80\x98angle\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.177194] (sc_mini_ros2) StderrLine: {'line': b'  314 |                 int temp_i, i,angle,temp_Size;\n'}
+[13.177480] (sc_mini_ros2) StderrLine: {'line': b'      |                               ^~~~~\n'}
+[13.177749] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:315:23: warning: unused variable \xe2\x80\x98m_fAngle\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.177984] (sc_mini_ros2) StderrLine: {'line': b'  315 |                 float m_fAngle;\n'}
+[13.178226] (sc_mini_ros2) StderrLine: {'line': b'      |                       ^~~~~~~~\n'}
+[13.178506] (-) TimerEvent: {}
+[13.185669] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function \xe2\x80\x98int sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)\xe2\x80\x99:\n'}
+[13.186136] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:353:21: warning: unused variable \xe2\x80\x98index\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.186453] (sc_mini_ros2) StderrLine: {'line': b'  353 |                 int index;\n'}
+[13.187666] (sc_mini_ros2) StderrLine: {'line': b'      |                     ^~~~~\n'}
+[13.188114] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:354:22: warning: unused variable \xe2\x80\x98FrameOK\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.188392] (sc_mini_ros2) StderrLine: {'line': b'  354 |                 bool FrameOK = false;\n'}
+[13.188681] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~~\n'}
+[13.188954] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:355:22: warning: unused variable \xe2\x80\x98StrBuf\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.189218] (sc_mini_ros2) StderrLine: {'line': b'  355 |                 char StrBuf[100];\n'}
+[13.189488] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~\n'}
+[13.189754] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:356:21: warning: unused variable \xe2\x80\x98CheckFlag\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.189989] (sc_mini_ros2) StderrLine: {'line': b'  356 |                 int CheckFlag=0;\n'}
+[13.190222] (sc_mini_ros2) StderrLine: {'line': b'      |                     ^~~~~~~~~\n'}
+[13.193122] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:357:22: warning: unused variable \xe2\x80\x98WaitOneFrame\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.193573] (sc_mini_ros2) StderrLine: {'line': b'  357 |                 bool WaitOneFrame = true;\n'}
+[13.194372] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~~~~~~~\n'}
+[13.196185] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:359:22: warning: unused variable \xe2\x80\x98ZoneNo\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.199091] (sc_mini_ros2) StderrLine: {'line': b'  359 |                 char ZoneNo;\n'}
+[13.202098] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~\n'}
+[13.202728] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:360:22: warning: unused variable \xe2\x80\x98SampleNumber\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.204387] (sc_mini_ros2) StderrLine: {'line': b'  360 |                 char SampleNumber;\n'}
+[13.204831] (sc_mini_ros2) StderrLine: {'line': b'      |                      ^~~~~~~~~~~~\n'}
+[13.205282] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:23: warning: unused variable \xe2\x80\x98Angle_fsa\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.207954] (sc_mini_ros2) StderrLine: {'line': b'  361 |                 float Angle_fsa, Angle_lsa;\n'}
+[13.208368] (sc_mini_ros2) StderrLine: {'line': b'      |                       ^~~~~~~~~\n'}
+[13.208761] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:34: warning: unused variable \xe2\x80\x98Angle_lsa\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.209362] (sc_mini_ros2) StderrLine: {'line': b'  361 |                 float Angle_fsa, Angle_lsa;\n'}
+[13.213999] (sc_mini_ros2) StderrLine: {'line': b'      |                                  ^~~~~~~~~\n'}
+[13.214558] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:362:23: warning: unused variable \xe2\x80\x98StartAngle\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.215917] (sc_mini_ros2) StderrLine: {'line': b'  362 |                 short StartAngle;\n'}
+[13.218464] (sc_mini_ros2) StderrLine: {'line': b'      |                       ^~~~~~~~~~\n'}
+[13.219589] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:363:23: warning: unused variable \xe2\x80\x98StopAngle\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.223338] (sc_mini_ros2) StderrLine: {'line': b'  363 |                 short StopAngle;\n'}
+[13.223741] (sc_mini_ros2) StderrLine: {'line': b'      |                       ^~~~~~~~~\n'}
+[13.224062] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:368:23: warning: unused variable \xe2\x80\x98angle_check\xe2\x80\x99 [-Wunused-variable]\n'}
+[13.224384] (sc_mini_ros2) StderrLine: {'line': b'  368 |                 float angle_check;\n'}
+[13.224734] (sc_mini_ros2) StderrLine: {'line': b'      |                       ^~~~~~~~~~~\n'}
+[13.225017] (sc_mini_ros2) StderrLine: {'line': b'/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:347:75: warning: unused parameter \xe2\x80\x98fd\xe2\x80\x99 [-Wunused-parameter]\n'}
+[13.225283] (sc_mini_ros2) StderrLine: {'line': b'  347 |         int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int fd)\n'}
+[13.226370] (sc_mini_ros2) StderrLine: {'line': b'      |                                                                       ~~~~^~\n'}
+[13.280872] (-) TimerEvent: {}
+[13.381788] (-) TimerEvent: {}
+[13.482480] (-) TimerEvent: {}
+[13.583702] (-) TimerEvent: {}
+[13.684269] (-) TimerEvent: {}
+[13.784840] (-) TimerEvent: {}
+[13.885731] (-) TimerEvent: {}
+[13.986456] (-) TimerEvent: {}
+[14.086773] (-) TimerEvent: {}
+[14.187657] (-) TimerEvent: {}
+[14.289009] (-) TimerEvent: {}
+[14.389829] (-) TimerEvent: {}
+[14.490090] (-) TimerEvent: {}
+[14.590359] (-) TimerEvent: {}
+[14.690689] (-) TimerEvent: {}
+[14.791027] (-) TimerEvent: {}
+[14.895010] (-) TimerEvent: {}
+[14.995487] (-) TimerEvent: {}
+[15.095789] (-) TimerEvent: {}
+[15.196327] (-) TimerEvent: {}
+[15.297053] (-) TimerEvent: {}
+[15.397710] (-) TimerEvent: {}
+[15.498656] (-) TimerEvent: {}
+[15.600712] (-) TimerEvent: {}
+[15.701088] (-) TimerEvent: {}
+[15.803346] (-) TimerEvent: {}
+[15.904287] (-) TimerEvent: {}
+[16.005234] (-) TimerEvent: {}
+[16.105503] (-) TimerEvent: {}
+[16.206052] (-) TimerEvent: {}
+[16.308975] (-) TimerEvent: {}
+[16.410584] (-) TimerEvent: {}
+[16.510950] (-) TimerEvent: {}
+[16.611537] (-) TimerEvent: {}
+[16.715235] (-) TimerEvent: {}
+[16.816062] (-) TimerEvent: {}
+[16.917705] (-) TimerEvent: {}
+[17.018989] (-) TimerEvent: {}
+[17.120086] (-) TimerEvent: {}
+[17.220508] (-) TimerEvent: {}
+[17.320840] (-) TimerEvent: {}
+[17.426445] (-) TimerEvent: {}
+[17.526810] (-) TimerEvent: {}
+[17.627140] (-) TimerEvent: {}
+[17.727741] (-) TimerEvent: {}
+[17.828204] (-) TimerEvent: {}
+[17.928963] (-) TimerEvent: {}
+[18.032436] (-) TimerEvent: {}
+[18.134700] (-) TimerEvent: {}
+[18.235758] (-) TimerEvent: {}
+[18.336542] (-) TimerEvent: {}
+[18.437913] (-) TimerEvent: {}
+[18.538635] (-) TimerEvent: {}
+[18.640807] (-) TimerEvent: {}
+[18.741505] (-) TimerEvent: {}
+[18.842023] (-) TimerEvent: {}
+[18.942670] (-) TimerEvent: {}
+[19.044257] (-) TimerEvent: {}
+[19.147335] (-) TimerEvent: {}
+[19.247948] (-) TimerEvent: {}
+[19.348666] (-) TimerEvent: {}
+[19.449273] (-) TimerEvent: {}
+[19.550192] (-) TimerEvent: {}
+[19.650758] (-) TimerEvent: {}
+[19.751725] (-) TimerEvent: {}
+[19.852839] (-) TimerEvent: {}
+[19.955519] (-) TimerEvent: {}
+[20.056193] (-) TimerEvent: {}
+[20.157641] (-) TimerEvent: {}
+[20.258488] (-) TimerEvent: {}
+[20.361615] (-) TimerEvent: {}
+[20.462063] (-) TimerEvent: {}
+[20.564622] (-) TimerEvent: {}
+[20.665523] (-) TimerEvent: {}
+[20.765821] (-) TimerEvent: {}
+[20.866299] (-) TimerEvent: {}
+[20.967053] (-) TimerEvent: {}
+[21.067337] (-) TimerEvent: {}
+[21.168888] (-) TimerEvent: {}
+[21.273760] (-) TimerEvent: {}
+[21.375765] (-) TimerEvent: {}
+[21.476058] (-) TimerEvent: {}
+[21.576430] (-) TimerEvent: {}
+[21.676776] (-) TimerEvent: {}
+[21.777511] (-) TimerEvent: {}
+[21.880643] (-) TimerEvent: {}
+[21.980946] (-) TimerEvent: {}
+[22.083367] (-) TimerEvent: {}
+[22.186049] (-) TimerEvent: {}
+[22.286340] (-) TimerEvent: {}
+[22.386888] (-) TimerEvent: {}
+[22.487434] (-) TimerEvent: {}
+[22.588088] (-) TimerEvent: {}
+[22.691672] (-) TimerEvent: {}
+[22.793966] (-) TimerEvent: {}
+[22.894799] (-) TimerEvent: {}
+[22.995286] (-) TimerEvent: {}
+[23.099087] (-) TimerEvent: {}
+[23.199638] (-) TimerEvent: {}
+[23.303147] (-) TimerEvent: {}
+[23.404628] (-) TimerEvent: {}
+[23.505391] (-) TimerEvent: {}
+[23.535607] (sc_mini_ros2) StdoutLine: {'line': b'[ 66%] Linking CXX executable sc_mini_ros2\n'}
+[23.607627] (-) TimerEvent: {}
+[23.708902] (-) TimerEvent: {}
+[23.809523] (-) TimerEvent: {}
+[23.912039] (-) TimerEvent: {}
+[24.015133] (-) TimerEvent: {}
+[24.116943] (-) TimerEvent: {}
+[24.219024] (-) TimerEvent: {}
+[24.320676] (-) TimerEvent: {}
+[24.421190] (-) TimerEvent: {}
+[24.522787] (-) TimerEvent: {}
+[24.627985] (-) TimerEvent: {}
+[24.728899] (-) TimerEvent: {}
+[24.826814] (sc_mini_ros2) StdoutLine: {'line': b'[100%] Built target sc_mini_ros2\n'}
+[24.834357] (-) TimerEvent: {}
+[24.900625] (sc_mini_ros2) CommandEnded: {'returncode': 0}
+[24.913463] (sc_mini_ros2) JobProgress: {'identifier': 'sc_mini_ros2', 'progress': 'install'}
+[24.936039] (-) TimerEvent: {}
+[24.958708] (sc_mini_ros2) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2'], 'cwd': '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'amap'), ('CLAUDE_CODE_ENTRYPOINT', 'cli'), ('GIT_EDITOR', 'true'), ('XDG_SESSION_TYPE', 'x11'), ('GIT_ASKPASS', '/usr/share/code/resources/app/extensions/git/dist/askpass.sh'), ('SHLVL', '3'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/amap'), ('CHROME_DESKTOP', 'code.desktop'), ('TERM_PROGRAM_VERSION', '1.103.2'), ('DESKTOP_SESSION', 'ubuntu-xorg'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('VSCODE_GIT_ASKPASS_MAIN', '/usr/share/code/resources/app/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/usr/share/code/code'), ('PYDEVD_DISABLE_FILE_VALIDATION', '1'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1004'), ('BUNDLED_DEBUGPY_PATH', '/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/bundled/libs/debugpy'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=596032d9f13f67e8bcc48e2968ad99b9'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('COLCON_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('GTK_IM_MODULE', 'fcitx'), ('LOGNAME', 'amap'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('CLAUDE_CODE_SSE_PORT', '52102'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'amap'), ('TERM', 'xterm-256color'), ('OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE', 'delta'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/home/amap/.npm-global/bin:/opt/ros/humble/bin:/home/amap/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/bundled/scripts/noConfigScripts'), ('SESSION_MANAGER', 'local/amap:@/tmp/.ICE-unix/1004,unix/amap:/tmp/.ICE-unix/1004'), ('COREPACK_ENABLE_AUTO_PIN', '0'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/0162bcf1_f389_42e3_b80e_729200d05bc5'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('GDK_BACKEND', 'x11'), ('DISPLAY', ':0'), ('VSCODE_DEBUGPY_ADAPTER_ENDPOINTS', '/home/amap/.vscode/extensions/ms-python.debugpy-2025.10.0-linux-x64/.noConfigDebugAdapterEndpoints/endpoint-80cec8b5f95d2c8b.txt'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'Unity'), ('XMODIFIERS', '@im=fcitx'), ('XDG_SESSION_DESKTOP', 'ubuntu-xorg'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-47e6434fae.sock'), ('GNOME_TERMINAL_SERVICE', ':1.95'), ('TERM_PROGRAM', 'vscode'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2:/opt/ros/humble'), ('ORIGINAL_XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu-xorg'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('CLAUDECODE', '1'), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('QT_IM_MODULE', 'fcitx'), ('PWD', '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2'), ('ENABLE_IDE_INTEGRATION', 'true'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu-xorg:/etc/xdg'), ('CLUTTER_IM_MODULE', 'xim'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=596032d9f13f67e8bcc48e2968ad99b9'), ('XDG_DATA_DIRS', '/usr/share/ubuntu-xorg:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2:/opt/ros/humble')]), 'shell': False}
+[25.037777] (sc_mini_ros2) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[25.038159] (-) TimerEvent: {}
+[25.043509] (sc_mini_ros2) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[25.045511] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/lib/sc_mini_ros2/sc_mini_ros2\n'}
+[25.056874] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/rviz.launch.py\n'}
+[25.058427] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start.launch.py\n'}
+[25.058823] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start_tf.launch.py\n'}
+[25.064155] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//rviz/sc_m.rviz\n'}
+[25.064604] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//sc_mini.rules\n'}
+[25.070195] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/package_run_dependencies/sc_mini_ros2\n'}
+[25.080881] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/parent_prefix_path/sc_mini_ros2\n'}
+[25.081335] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.sh\n'}
+[25.081983] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.dsv\n'}
+[25.085927] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.sh\n'}
+[25.086534] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.dsv\n'}
+[25.091839] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.bash\n'}
+[25.098612] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.sh\n'}
+[25.106782] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.zsh\n'}
+[25.108244] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.dsv\n'}
+[25.119497] (sc_mini_ros2) StdoutLine: {'line': b'-- Symlinking: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.dsv\n'}
+[25.138352] (-) TimerEvent: {}
+[25.204029] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/packages/sc_mini_ros2\n'}
+[25.214805] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config.cmake\n'}
+[25.221822] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config-version.cmake\n'}
+[25.229885] (sc_mini_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.xml\n'}
+[25.238550] (-) TimerEvent: {}
+[25.239385] (sc_mini_ros2) CommandEnded: {'returncode': 0}
+[25.339162] (-) TimerEvent: {}
+[25.406315] (sc_mini_ros2) JobEnded: {'identifier': 'sc_mini_ros2', 'rc': 0}
+[25.416254] (-) EventReactorShutdown: {}

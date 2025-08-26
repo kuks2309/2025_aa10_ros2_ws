@@ -1,0 +1,92 @@
+[0.073s] Invoking command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2 -- -j4 -l4
+[0.431s] Consolidate compiler generated dependencies of target sc_mini_ros2
+[0.483s] [ 33%] Building CXX object CMakeFiles/sc_mini_ros2.dir/src/sc_mini_ros2.cpp.o
+[13.141s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferStart’ [-Wmissing-field-initializers]
+[13.141s]    43 | EaiDataStr EaiData = {0};
+[13.142s]       |                        ^
+[13.142s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:43:24: warning: missing initializer for member ‘EaiDataStr::BufferLen’ [-Wmissing-field-initializers]
+[13.165s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+[13.166s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:51: warning: unused variable ‘x4’ [-Wunused-variable]
+[13.167s]   105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+[13.167s]       |                                                   ^~
+[13.168s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:105:54: warning: unused variable ‘y4’ [-Wunused-variable]
+[13.168s]   105 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+[13.168s]       |                                                      ^~
+[13.169s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:108:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+[13.169s]   108 |                 char StrBuf[100];
+[13.169s]       |                      ^~~~~~
+[13.172s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘void sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)’:
+[13.173s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:314:31: warning: unused variable ‘angle’ [-Wunused-variable]
+[13.173s]   314 |                 int temp_i, i,angle,temp_Size;
+[13.173s]       |                               ^~~~~
+[13.174s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:315:23: warning: unused variable ‘m_fAngle’ [-Wunused-variable]
+[13.174s]   315 |                 float m_fAngle;
+[13.174s]       |                       ^~~~~~~~
+[13.182s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp: In member function ‘int sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)’:
+[13.182s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:353:21: warning: unused variable ‘index’ [-Wunused-variable]
+[13.183s]   353 |                 int index;
+[13.184s]       |                     ^~~~~
+[13.184s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:354:22: warning: unused variable ‘FrameOK’ [-Wunused-variable]
+[13.184s]   354 |                 bool FrameOK = false;
+[13.185s]       |                      ^~~~~~~
+[13.185s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:355:22: warning: unused variable ‘StrBuf’ [-Wunused-variable]
+[13.185s]   355 |                 char StrBuf[100];
+[13.185s]       |                      ^~~~~~
+[13.186s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:356:21: warning: unused variable ‘CheckFlag’ [-Wunused-variable]
+[13.186s]   356 |                 int CheckFlag=0;
+[13.186s]       |                     ^~~~~~~~~
+[13.189s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:357:22: warning: unused variable ‘WaitOneFrame’ [-Wunused-variable]
+[13.190s]   357 |                 bool WaitOneFrame = true;
+[13.190s]       |                      ^~~~~~~~~~~~
+[13.195s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:359:22: warning: unused variable ‘ZoneNo’ [-Wunused-variable]
+[13.195s]   359 |                 char ZoneNo;
+[13.198s]       |                      ^~~~~~
+[13.200s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:360:22: warning: unused variable ‘SampleNumber’ [-Wunused-variable]
+[13.200s]   360 |                 char SampleNumber;
+[13.201s]       |                      ^~~~~~~~~~~~
+[13.203s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:23: warning: unused variable ‘Angle_fsa’ [-Wunused-variable]
+[13.204s]   361 |                 float Angle_fsa, Angle_lsa;
+[13.204s]       |                       ^~~~~~~~~
+[13.205s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:361:34: warning: unused variable ‘Angle_lsa’ [-Wunused-variable]
+[13.209s]   361 |                 float Angle_fsa, Angle_lsa;
+[13.210s]       |                                  ^~~~~~~~~
+[13.211s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:362:23: warning: unused variable ‘StartAngle’ [-Wunused-variable]
+[13.214s]   362 |                 short StartAngle;
+[13.215s]       |                       ^~~~~~~~~~
+[13.219s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:363:23: warning: unused variable ‘StopAngle’ [-Wunused-variable]
+[13.219s]   363 |                 short StopAngle;
+[13.220s]       |                       ^~~~~~~~~
+[13.220s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:368:23: warning: unused variable ‘angle_check’ [-Wunused-variable]
+[13.220s]   368 |                 float angle_check;
+[13.221s]       |                       ^~~~~~~~~~~
+[13.221s] /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:347:75: warning: unused parameter ‘fd’ [-Wunused-parameter]
+[13.222s]   347 |         int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int fd)
+[13.222s]       |                                                                       ~~~~^~
+[23.532s] [ 66%] Linking CXX executable sc_mini_ros2
+[24.827s] [100%] Built target sc_mini_ros2
+[24.897s] Invoked command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2 -- -j4 -l4
+[24.969s] Invoking command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2
+[25.034s] -- Install configuration: ""
+[25.041s] -- Execute custom install script
+[25.042s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/lib/sc_mini_ros2/sc_mini_ros2
+[25.054s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/rviz.launch.py
+[25.054s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start.launch.py
+[25.055s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start_tf.launch.py
+[25.060s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//rviz/sc_m.rviz
+[25.061s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//sc_mini.rules
+[25.070s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/package_run_dependencies/sc_mini_ros2
+[25.077s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/parent_prefix_path/sc_mini_ros2
+[25.077s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.sh
+[25.081s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.dsv
+[25.082s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.sh
+[25.083s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.dsv
+[25.089s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.bash
+[25.096s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.sh
+[25.104s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.zsh
+[25.114s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.dsv
+[25.119s] -- Symlinking: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.dsv
+[25.200s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/packages/sc_mini_ros2
+[25.211s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config.cmake
+[25.225s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config-version.cmake
+[25.226s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.xml
+[25.236s] Invoked command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2

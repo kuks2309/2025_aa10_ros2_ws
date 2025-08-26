@@ -1,0 +1,68 @@
+[0.050s] Invoking command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2 -DCMAKE_INSTALL_PREFIX=/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2
+[0.101s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.780s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.890s] -- Found rclcpp: 16.0.14 (/opt/ros/humble/share/rclcpp/cmake)
+[1.167s] -- Found rosidl_generator_c: 3.1.7 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[1.188s] -- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[1.242s] -- Found rosidl_generator_cpp: 3.1.7 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[1.293s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.387s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.551s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[1.560s] -- Found rmw_fastrtps_cpp: 6.2.8 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[1.936s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.268s] -- Found sensor_msgs: 4.9.0 (/opt/ros/humble/share/sensor_msgs/cmake)
+[2.383s] -- Found nav_msgs: 4.9.0 (/opt/ros/humble/share/nav_msgs/cmake)
+[2.491s] -- Found tf2: 0.25.16 (/opt/ros/humble/share/tf2/cmake)
+[2.504s] -- Found tf2_ros: 0.25.16 (/opt/ros/humble/share/tf2_ros/cmake)
+[3.163s] -- Found tf2_geometry_msgs: 0.25.16 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)
+[3.195s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+[3.200s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[3.205s] -- Found pluginlib: 5.1.0 (/opt/ros/humble/share/pluginlib/cmake)
+[3.290s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[3.581s] -- Added test 'copyright' to check source files copyright and LICENSE
+[3.584s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[3.585s] -- Configured cppcheck include dirs: /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/include
+[3.585s] -- Configured cppcheck exclude dirs and/or files: 
+[3.587s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[3.588s] -- Configured cpplint exclude dirs and/or files: 
+[3.588s] -- Added test 'flake8' to check Python code syntax and style conventions
+[3.590s] -- Added test 'lint_cmake' to check CMake code style
+[3.591s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[3.593s] -- Added test 'uncrustify' to check C / C++ code style
+[3.593s] -- Configured uncrustify additional arguments: 
+[3.594s] -- Added test 'xmllint' to check XML markup files
+[3.600s] -- Configuring done
+[3.652s] -- Generating done
+[3.674s] -- Build files have been written to: /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2
+[3.744s] Invoked command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2 -DCMAKE_INSTALL_PREFIX=/home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2
+[3.749s] Invoking command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2 -- -j4 -l4
+[3.955s] Consolidate compiler generated dependencies of target sc_mini_ros2
+[4.015s] [ 33%] Building CXX object CMakeFiles/sc_mini_ros2.dir/src/serial_port.cpp.o
+[4.389s] [ 66%] Linking CXX executable sc_mini_ros2
+[5.775s] [100%] Built target sc_mini_ros2
+[5.814s] Invoked command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2 -- -j4 -l4
+[5.879s] Invoking command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2
+[5.903s] -- Install configuration: ""
+[5.908s] -- Execute custom install script
+[5.908s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/lib/sc_mini_ros2/sc_mini_ros2
+[5.911s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/rviz.launch.py
+[5.913s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start.launch.py
+[5.918s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//launch/start_tf.launch.py
+[5.928s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//rviz/sc_m.rviz
+[5.928s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2//sc_mini.rules
+[5.937s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/package_run_dependencies/sc_mini_ros2
+[5.938s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/parent_prefix_path/sc_mini_ros2
+[5.942s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.sh
+[5.943s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/ament_prefix_path.dsv
+[5.945s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.sh
+[5.947s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/environment/path.dsv
+[5.953s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.bash
+[5.953s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.sh
+[5.954s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.zsh
+[5.954s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/local_setup.dsv
+[5.954s] -- Symlinking: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.dsv
+[5.982s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/ament_index/resource_index/packages/sc_mini_ros2
+[5.982s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config.cmake
+[5.983s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/cmake/sc_mini_ros2Config-version.cmake
+[5.983s] -- Up-to-date symlink: /home/amap/2025_aa10_ros2_ws/install/sc_mini_ros2/share/sc_mini_ros2/package.xml
+[5.989s] Invoked command in '/home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/amap/2025_aa10_ros2_ws/build/sc_mini_ros2

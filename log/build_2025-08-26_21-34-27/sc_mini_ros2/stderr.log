@@ -1,0 +1,68 @@
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:42:24:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KEaiDataStr::BufferStart[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+   42 | EaiDataStr EaiData = {0[01;35m[K}[m[K;
+      |                        [01;35m[K^[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:42:24:[m[K [01;35m[Kwarning: [m[Kmissing initializer for member ‘[01m[KEaiDataStr::BufferLen[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wmissing-field-initializers-Wmissing-field-initializers]8;;[m[K]
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kvoid sc_m_c::SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:118:51:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kx4[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  118 |                 float x0,y0, x1,y1, x2,y2, x3,y3, [01;35m[Kx4[m[K,y4, r1, r2;
+      |                                                   [01;35m[K^~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:118:54:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Ky4[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  118 |                 float x0,y0, x1,y1, x2,y2, x3,y3, x4,[01;35m[Ky4[m[K, r1, r2;
+      |                                                      [01;35m[K^~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:121:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStrBuf[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  121 |                 char [01;35m[KStrBuf[m[K[100];
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kvoid sc_m_c::SCLaser::angle_insert(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:332:31:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  332 |                 int temp_i, i,[01;35m[Kangle[m[K,temp_Size;
+      |                               [01;35m[K^~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:333:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Km_fAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  333 |                 float [01;35m[Km_fAngle[m[K;
+      |                       [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:[m[K In member function ‘[01m[Kint sc_m_c::SCLaser::poll(sensor_msgs::msg::LaserScan_<std::allocator<void> >::SharedPtr, int)[m[K’:
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:381:21:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kindex[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  381 |                 int [01;35m[Kindex[m[K;
+      |                     [01;35m[K^~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:382:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KFrameOK[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  382 |                 bool [01;35m[KFrameOK[m[K = false;
+      |                      [01;35m[K^~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:383:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStrBuf[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  383 |                 char [01;35m[KStrBuf[m[K[100];
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:384:21:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KCheckFlag[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  384 |                 int [01;35m[KCheckFlag[m[K=0;//
+      |                     [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:385:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KWaitOneFrame[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  385 |                 bool [01;35m[KWaitOneFrame[m[K = true;
+      |                      [01;35m[K^~~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:387:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KZoneNo[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  387 |                 char [01;35m[KZoneNo[m[K;
+      |                      [01;35m[K^~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:388:22:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KSampleNumber[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  388 |                 char [01;35m[KSampleNumber[m[K;
+      |                      [01;35m[K^~~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:389:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KAngle_fsa[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  389 |                 float [01;35m[KAngle_fsa[m[K, Angle_lsa;
+      |                       [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:389:34:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KAngle_lsa[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  389 |                 float Angle_fsa, [01;35m[KAngle_lsa[m[K;
+      |                                  [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:390:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStartAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  390 |                 short [01;35m[KStartAngle[m[K;
+      |                       [01;35m[K^~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:391:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[KStopAngle[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  391 |                 short [01;35m[KStopAngle[m[K;
+      |                       [01;35m[K^~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:396:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_check[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  396 |                 float [01;35m[Kangle_check[m[K;
+      |                       [01;35m[K^~~~~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:397:23:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_c0[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  397 |                 float [01;35m[Kangle_c0[m[K,angle_c1;
+      |                       [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:397:32:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Kangle_c1[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  397 |                 float angle_c0,[01;35m[Kangle_c1[m[K;
+      |                                [01;35m[K^~~~~~~~[m[K
+[01m[K/home/amap/2025_aa10_ros2_ws/src/sc_mini_ros2/src/sc_mini_ros2.cpp:375:75:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kfd[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+  375 |   int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,[01;35m[Kint fd[m[K)
+      |                                                                 [01;35m[K~~~~^~[m[K
+
