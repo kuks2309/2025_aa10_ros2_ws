@@ -39,11 +39,11 @@ int AngleCompensateMode = 2; //0-none, 1-AC0, 2-AC1
 
 using namespace std;
 
-EaiDataStr EaiData = {0};
+EaiDataStr EaiData = {{0}, 0, 0};
 
-//重要: robot_rotate_compensate_dir只设置两个值+1和-1，意思是做机器人旋转角度补偿时，是按正方向补偿还是按负方向补偿。
-//	和实际中机器人底盘顺时针旋转时陀螺仪输出的角度值是增加还是减小有关，所以请按实际来设置是+1还是-1
-//	按经验，俯视机器人，机器人顺时针旋转时，陀螺仪数据减小，则该值为+1，否则为-1
+//Important: robot_rotate_compensate_dir only sets two values +1 and -1, meaning when doing robot rotation angle compensation, whether to compensate in positive or negative direction.
+//	Related to whether the gyroscope output angle value increases or decreases when the robot chassis rotates clockwise in practice, so please set +1 or -1 according to actual situation
+//	By experience, when viewing robot from above, if robot rotates clockwise and gyroscope data decreases, then this value is +1, otherwise -1
 //	注意本SDK里计算的的陀螺仪角度数据的单位是度，不是弧度。
 const int robot_rotate_compensate_dir = +1;
 
@@ -115,10 +115,9 @@ namespace sc_m_c
 	void SCLaser::PointCloudFilter(sensor_msgs::msg::LaserScan::SharedPtr Scan)
 	{
 		int i0, i1, i2, i3, i4;
-		float x0,y0, x1,y1, x2,y2, x3,y3, x4,y4, r1, r2;
+		float x0,y0, x1,y1, x2,y2, x3,y3, r1, r2;
 		float d01, d12, d23, d34;
 		float a, b, Adeta;
-		char StrBuf[100];
 		float FilterRatioAdj;
 		float AngDiff;
 		int DepthState;
@@ -329,8 +328,7 @@ namespace sc_m_c
 	 */
 	void SCLaser::angle_insert(sensor_msgs::msg::LaserScan::SharedPtr scan_in, sensor_msgs::msg::LaserScan::SharedPtr scan_out)
 	{
-		int temp_i, i,angle,temp_Size;
-		float m_fAngle;
+		int temp_i, i, temp_Size;
 		temp_Size = 500;  //note: 雷达转一圈输出的点数按固定的1000*ROS_N_MUL点来输出
 
 		scan_out->ranges.resize(temp_Size*ROS_N_MUL);
@@ -372,29 +370,16 @@ namespace sc_m_c
 #define SERIAL_PORT_DATA_BUF_LEN 4096
 	unsigned char serialport_databuf[SERIAL_PORT_DATA_BUF_LEN];
 #define RANGES_TIMP_SIZE 500
-	int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int fd)
+	int SCLaser::poll(sensor_msgs::msg::LaserScan::SharedPtr scan,int /* fd */)
 	{
 		int Rcv=0,cpylen;
 		int temp_depth;
 		int i;
-		
-		int index;
-		bool FrameOK = false;
-		char StrBuf[100];
-		int CheckFlag=0;//
-		bool WaitOneFrame = true;
 
-		char ZoneNo;
-		char SampleNumber;
-		float Angle_fsa, Angle_lsa;
-		short StartAngle;
-		short StopAngle;
 		float fStartAngle;
 		float fIncAngle;
 		float fStopAngle;
 		float fTempAngle;
-		float angle_check;
-		float angle_c0,angle_c1;
 		unsigned char csl, csh;
 
 		int ret = -1;
@@ -433,7 +418,7 @@ namespace sc_m_c
 				{
 					temp_depth = (EaiData.Frame.Si[0] | (EaiData.Frame.Si[1]<<8))/4;
 					scan->ranges[AllAngleIndex] = temp_depth/1000.0F;
-					Angle_in[AllAngleIndex] = (EaiData.Frame.FSAL + EaiData.Frame.FSAH*256)/128.0;
+					Angle_in[AllAngleIndex] = 360.0 - (EaiData.Frame.FSAL + EaiData.Frame.FSAH*256)/128.0;
 					Size = AllAngleIndex+1;
 					EaiData.BufferLen = EaiData.BufferLen - EAI_FRAME_LEN_MIN;
 					PutRemainder2Start(EaiData.Buffer, EAI_FRAME_LEN_MIN, EaiData.BufferLen);
@@ -495,7 +480,7 @@ namespace sc_m_c
 							{
 								fTempAngle = fmod(fTempAngle, 360);
 							}
-							Angle_in[AllAngleIndex] = fTempAngle;  //360 - fTempAngle;
+							Angle_in[AllAngleIndex] = 360.0 - fTempAngle;
 							AllAngleIndex++;
 
 						}
