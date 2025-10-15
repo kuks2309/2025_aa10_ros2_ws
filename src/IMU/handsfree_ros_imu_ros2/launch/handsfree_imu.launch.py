@@ -11,7 +11,8 @@ def generate_launch_description():
             parameters=[{
                 'port': '/dev/ttyUSB0',
                 'baud': 921600,
-                'gra_normalization': True
+                'gra_normalization': True,
+                'frame_id': 'imu_link'
             }]
         )
     ])

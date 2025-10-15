@@ -20,11 +20,13 @@ class HandsfreeImuNode(Node):
         self.declare_parameter('port', '/dev/ttyUSB0')
         self.declare_parameter('baud', 921600)
         self.declare_parameter('gra_normalization', True)
-        
+        self.declare_parameter('frame_id', 'imu_link')
+
         # Get parameters
         self.port = self.get_parameter('port').value
         self.baudrate = self.get_parameter('baud').value
         self.gra_normalization = self.get_parameter('gra_normalization').value
+        self.frame_id = self.get_parameter('frame_id').value
         
         # Subscribers
         self.sub_imu_angle_offset = self.create_subscription(Float32, 'imu_angle_offset', self.imu_angle_offset_callback, 10)
@@ -177,11 +179,11 @@ class HandsfreeImuNode(Node):
             
             # IMU message
             self.imu_msg.header.stamp = stamp
-            self.imu_msg.header.frame_id = "base_link"
-            
+            self.imu_msg.header.frame_id = self.frame_id
+
             # Magnetometer message
             self.mag_msg.header.stamp = stamp
-            self.mag_msg.header.frame_id = "base_link"
+            self.mag_msg.header.frame_id = self.frame_id
             
             # Convert to quaternion - match ROS1 order
             angle_radian = [self.angle_degree[i] * math.pi / 180 for i in range(3)]
