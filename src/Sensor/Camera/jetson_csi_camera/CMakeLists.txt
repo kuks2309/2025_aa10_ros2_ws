@@ -12,6 +12,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(nlohmann_json 3.2.0 REQUIRED)
 
 # Include directories
 include_directories(include)
@@ -28,6 +29,7 @@ ament_target_dependencies(csi_camera_node
 
 target_link_libraries(csi_camera_node
   ${OpenCV_LIBRARIES}
+  nlohmann_json::nlohmann_json
 )
 
 # Add standalone capture executable (non-ROS2)

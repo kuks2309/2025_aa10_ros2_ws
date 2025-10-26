@@ -6,6 +6,10 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include <string>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 class CSICameraNode : public rclcpp::Node
 {
@@ -21,6 +25,8 @@ public:
         this->declare_parameter<std::string>("camera_frame_id", "camera_link");
         this->declare_parameter<double>("publish_rate", 30.0);
         this->declare_parameter<double>("image_scale", 1.0);  // Image scaling factor (0.5 = 50%, 1.0 = 100%)
+        this->declare_parameter<std::string>("roi_config_path", 
+            "/home/amap/2025_aa10_ros2_ws/src/AI/training_image_processor/roi_config.json");
 
         // Get parameters
         camera_id_ = this->get_parameter("camera_id").as_int();
@@ -31,10 +37,17 @@ public:
         camera_frame_id_ = this->get_parameter("camera_frame_id").as_string();
         double publish_rate = this->get_parameter("publish_rate").as_double();
         image_scale_ = this->get_parameter("image_scale").as_double();
+        std::string roi_config_path = this->get_parameter("roi_config_path").as_string();
 
-        // Create publisher
+        // Load ROI configuration
+        loadROIConfig(roi_config_path);
+
+        // Create publishers
         image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image_raw", 10);
         camera_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 10);
+        
+        // Create AI lane detection publisher for cropped and resized ROI
+        ai_lane_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image/ai_lane_detect", 10);
 
         // Build GStreamer pipeline for CSI camera
         std::string gst_pipeline = gstreamer_pipeline(
@@ -73,6 +86,10 @@ public:
                     image_scale_,
                     static_cast<int>(image_width_ * image_scale_),
                     static_cast<int>(image_height_ * image_scale_));
+        RCLCPP_INFO(this->get_logger(), "ROI Config: x=%d, y=%d, width=%d, height=%d",
+                    roi_x_, roi_y_, roi_width_, roi_height_);
+        RCLCPP_INFO(this->get_logger(), "AI Lane Detect Output: %dx%d",
+                    roi_width_/2, roi_height_/2);
         RCLCPP_INFO(this->get_logger(), "====================================");
 
         // Create timer for publishing
@@ -92,6 +109,45 @@ public:
     }
 
 private:
+    void loadROIConfig(const std::string& config_path)
+    {
+        try
+        {
+            std::ifstream config_file(config_path);
+            if (!config_file.is_open())
+            {
+                RCLCPP_WARN(this->get_logger(), 
+                    "Could not open ROI config file: %s. Using default ROI.", 
+                    config_path.c_str());
+                roi_x_ = 0;
+                roi_y_ = 0;
+                roi_width_ = 1280;
+                roi_height_ = 200;
+                return;
+            }
+
+            json roi_config;
+            config_file >> roi_config;
+
+            roi_x_ = roi_config.value("x", 0);
+            roi_y_ = roi_config.value("y", 0);
+            roi_width_ = roi_config.value("width", 1280);
+            roi_height_ = roi_config.value("height", 200);
+
+            RCLCPP_INFO(this->get_logger(), 
+                "Loaded ROI config from %s", config_path.c_str());
+        }
+        catch (const std::exception& e)
+        {
+            RCLCPP_WARN(this->get_logger(), 
+                "Error reading ROI config: %s. Using default ROI.", e.what());
+            roi_x_ = 0;
+            roi_y_ = 0;
+            roi_width_ = 1280;
+            roi_height_ = 200;
+        }
+    }
+
     std::string gstreamer_pipeline(int camera_id, int capture_width, int capture_height,
                                    int framerate, int flip_method)
     {
@@ -150,6 +206,29 @@ private:
         // Publish image
         image_pub_->publish(*msg);
 
+        // Crop ROI and resize for AI lane detection
+        cv::Mat roi_frame;
+        if (roi_x_ >= 0 && roi_y_ >= 0 && 
+            roi_x_ + roi_width_ <= output_frame.cols && 
+            roi_y_ + roi_height_ <= output_frame.rows)
+        {
+            // Crop the ROI region
+            cv::Rect roi(roi_x_, roi_y_, roi_width_, roi_height_);
+            roi_frame = output_frame(roi);
+            
+            // Resize to 1/2 of original size
+            cv::Mat resized_roi;
+            cv::resize(roi_frame, resized_roi, 
+                      cv::Size(roi_width_ / 2, roi_height_ / 2), 
+                      0, 0, cv::INTER_LINEAR);
+            
+            // Convert to ROS message and publish
+            auto ai_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", resized_roi).toImageMsg();
+            ai_msg->header.stamp = this->now();
+            ai_msg->header.frame_id = camera_frame_id_;
+            ai_lane_pub_->publish(*ai_msg);
+        }
+
         // Publish camera info
         auto camera_info_msg = std::make_shared<sensor_msgs::msg::CameraInfo>();
         camera_info_msg->header = msg->header;
@@ -169,6 +248,7 @@ private:
 
     cv::VideoCapture cap_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr ai_lane_pub_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
@@ -180,6 +260,12 @@ private:
     std::string camera_frame_id_;
     double image_scale_;
     size_t frame_count_ = 0;
+    
+    // ROI parameters
+    int roi_x_;
+    int roi_y_;
+    int roi_width_;
+    int roi_height_;
 };
 
 int main(int argc, char** argv)
