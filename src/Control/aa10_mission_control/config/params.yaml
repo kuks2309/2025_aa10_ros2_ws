@@ -1,0 +1,6 @@
+aa10_mission_control_node:
+  ros__parameters:
+    # Sensor topics (real hardware only)
+    imu_topic: "/handsfree/imu_yaw_degree"
+    lidar_topic: "/scan"
+    camera_topic: "/camera/image_raw"

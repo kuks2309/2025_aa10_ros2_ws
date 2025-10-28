@@ -17,7 +17,7 @@ class HandsfreeImuNode(Node):
         super().__init__('handsfree_imu_node')
         
         # Declare parameters
-        self.declare_parameter('port', '/dev/ttyUSB0')
+        self.declare_parameter('port', '/dev/HFRobotIMU')
         self.declare_parameter('baud', 921600)
         self.declare_parameter('gra_normalization', True)
         self.declare_parameter('frame_id', 'imu_link')
@@ -36,6 +36,8 @@ class HandsfreeImuNode(Node):
         self.mag_pub = self.create_publisher(MagneticField, 'handsfree/mag', 10)
         self.imu_yaw_pub = self.create_publisher(Float32, 'handsfree/imu_yaw_degree', 10)
         self.imu_yaw_correction_pub = self.create_publisher(Float32, 'handsfree/imu_yaw_correction_degree', 10)
+        self.imu_roll_pub = self.create_publisher(Float32, 'handsfree/imu_roll_degree', 10)
+        self.imu_pitch_pub = self.create_publisher(Float32, 'handsfree/imu_pitch_degree', 10)
         
         # Variables
         self.imu_angle_offset = 0.0
@@ -52,6 +54,8 @@ class HandsfreeImuNode(Node):
         self.mag_msg = MagneticField()
         self.yaw_msg = Float32()
         self.yaw_correction_msg = Float32()
+        self.roll_msg = Float32()
+        self.pitch_msg = Float32()
 
         
         # Python version
@@ -82,7 +86,7 @@ class HandsfreeImuNode(Node):
         
     def find_ttyUSB(self):
         """Find ttyUSB* devices"""
-        self.get_logger().info('Default IMU port is /dev/ttyUSB0')
+        self.get_logger().info('Default IMU port is /dev/HFRobotIMU')
         posts = [port.device for port in serial.tools.list_ports.comports() if 'USB' in port.device]
         self.get_logger().info(f'Found {len(posts)} USB devices: {posts}')
         
@@ -186,10 +190,12 @@ class HandsfreeImuNode(Node):
             self.mag_msg.header.frame_id = self.frame_id
             
             # Convert to quaternion - match ROS1 order
+            # Invert yaw (Z-axis) to match ROS coordinate system
             angle_radian = [self.angle_degree[i] * math.pi / 180 for i in range(3)]
             # ROS1 uses quaternion_from_euler which returns [x,y,z,w]
             # transforms3d.euler2quat returns [w,x,y,z] so we need to adjust
-            qua = euler2quat(angle_radian[0], -angle_radian[1], -angle_radian[2])
+            # Negate pitch and yaw to match ROS coordinate convention
+            qua = euler2quat(angle_radian[0], -angle_radian[1], angle_radian[2])
             
             self.imu_msg.orientation.x = qua[1]  # qua[1] is x
             self.imu_msg.orientation.y = qua[2]  # qua[2] is y 
@@ -217,22 +223,47 @@ class HandsfreeImuNode(Node):
             self.mag_msg.magnetic_field.y = self.magnetometer[1]
             self.mag_msg.magnetic_field.z = self.magnetometer[2]
             
-            # Publish yaw degree
-            self.yaw_msg.data = self.angle_degree[2]
-            self.yaw_correction_msg.data = self.angle_degree[2] +  self.imu_angle_offset
-            
+            # Publish RPY degrees (inverted yaw to match ROS coordinate system: CCW = positive)
+            self.roll_msg.data = self.angle_degree[0]
+            self.pitch_msg.data = self.angle_degree[1]
+
+            # Convert yaw and normalize to 0-360 range
+            yaw_degree = -self.angle_degree[2]
+            if yaw_degree < 0:
+                yaw_degree += 360.0
+            elif yaw_degree >= 360.0:
+                yaw_degree -= 360.0
+
+            self.yaw_msg.data = yaw_degree
+
+            # Apply offset and normalize to 0-360 range
+            corrected_yaw = yaw_degree + self.imu_angle_offset
+            while corrected_yaw < 0.0:
+                corrected_yaw += 360.0
+            while corrected_yaw >= 360.0:
+                corrected_yaw -= 360.0
+            self.yaw_correction_msg.data = corrected_yaw
+
             # Publish messages
             self.imu_pub.publish(self.imu_msg)
             self.mag_pub.publish(self.mag_msg)
+            self.imu_roll_pub.publish(self.roll_msg)
+            self.imu_pitch_pub.publish(self.pitch_msg)
             self.imu_yaw_pub.publish(self.yaw_msg)
             self.imu_yaw_correction_pub.publish(self.yaw_correction_msg)
             
-            # Debug log - print once every 100 messages
+            # Debug log - print once every 100 messages with Roll, Pitch, Yaw, Corrected Yaw
             if not hasattr(self, 'msg_count'):
                 self.msg_count = 0
             self.msg_count += 1
             if self.msg_count % 100 == 0:
-                self.get_logger().info(f"Published {self.msg_count} IMU messages. Yaw: {self.angle_degree[2]:.2f}°")
+                self.get_logger().info(
+                    f"IMU #{self.msg_count} | "
+                    f"Roll: {self.angle_degree[0]:6.2f}° | "
+                    f"Pitch: {self.angle_degree[1]:6.2f}° | "
+                    f"Yaw: {yaw_degree:6.2f}° | "
+                    f"Corrected: {corrected_yaw:6.2f}°"
+                )
             
     def timer_callback(self):
         """Timer callback to read serial data"""
@@ -258,17 +289,32 @@ class HandsfreeImuNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    
-    imu_node = HandsfreeImuNode()
-    
+
+    imu_node = None
+
     try:
+        imu_node = HandsfreeImuNode()
         rclpy.spin(imu_node)
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        print(f"Error in IMU node: {e}")
     finally:
-        imu_node.hf_imu.close()
-        imu_node.destroy_node()
-        rclpy.shutdown()
+        # Clean up resources safely
+        try:
+            if imu_node is not None:
+                if hasattr(imu_node, 'hf_imu') and imu_node.hf_imu.is_open:
+                    imu_node.hf_imu.close()
+                imu_node.destroy_node()
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
+
+        # Only shutdown if rclpy is still initialized
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
 
 
 if __name__ == '__main__':

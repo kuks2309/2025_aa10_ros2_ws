@@ -28,7 +28,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'flip_method',
             default_value='0',
-            description='Flip method (0=none, 2=rotate-180)'
+            description='Flip method (0=none, 2=rotate-180, 4=horizontal-flip, 6=vertical-flip)'
         ),
         DeclareLaunchArgument(
             'camera_frame_id',

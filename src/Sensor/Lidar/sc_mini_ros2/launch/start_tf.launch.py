@@ -7,7 +7,7 @@ def generate_launch_description():
             package='tf2_ros',
             executable='static_transform_publisher',
             name='base_to_laser_broadcaster',
-            arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'laser_link']
+            arguments=['0.09', '0', '0', '0', '0', '0', 'base_link', 'laser_link']
         ),
         Node(
             package='sc_mini_ros2',

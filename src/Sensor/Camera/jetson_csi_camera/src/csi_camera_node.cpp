@@ -47,7 +47,7 @@ public:
         camera_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>("camera_info", 10);
         
         // Create AI lane detection publisher for cropped and resized ROI
-        ai_lane_pub_ = this->create_publisher<sensor_msgs::msg::Image>("image/ai_lane_detect", 10);
+        ai_lane_pub_ = this->create_publisher<sensor_msgs::msg::Image>("camera/ai_lane_detect", 10);
 
         // Build GStreamer pipeline for CSI camera
         std::string gst_pipeline = gstreamer_pipeline(
@@ -151,9 +151,9 @@ private:
     std::string gstreamer_pipeline(int camera_id, int capture_width, int capture_height,
                                    int framerate, int flip_method)
     {
+        // 1920x1080으로 캡처하여 센서 중앙 사용, 그 후 원하는 해상도로 스케일
         return "nvarguscamerasrc sensor-id=" + std::to_string(camera_id) +
-               " ! video/x-raw(memory:NVMM), width=(int)" + std::to_string(capture_width) +
-               ", height=(int)" + std::to_string(capture_height) +
+               " ! video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080" +
                ", framerate=(fraction)" + std::to_string(framerate) + "/1" +
                " ! nvvidconv flip-method=" + std::to_string(flip_method) +
                " ! video/x-raw, width=(int)" + std::to_string(capture_width) +

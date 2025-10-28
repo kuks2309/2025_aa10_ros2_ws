@@ -12,7 +12,7 @@ public:
     CSICameraCapture(int sensor_id = 0, int width = 1280, int height = 720, int framerate = 30)
         : sensor_id_(sensor_id), width_(width), height_(height), framerate_(framerate), saved_count_(0)
     {
-        pipeline_ = createGStreamerPipeline(sensor_id_, width_, height_, framerate_);
+        pipeline_ = createGStreamerPipeline(sensor_id_, width_, height_, framerate_, 0);  // flip_method=0 (반전 없음)
     }
 
     bool initialize()
@@ -113,6 +113,7 @@ public:
             int key = cv::waitKey(1) & 0xFF;
             if (key == 27) // ESC key - 종료
             {
+                std::cout << "\nESC 키 감지 - 종료 중..." << std::endl;
                 break;
             }
             else if (key == 32) // SPACE key - 이미지 저장
@@ -131,6 +132,10 @@ public:
                 }
             }
         }
+
+        // 리소스 정리
+        cap_.release();
+        cv::destroyAllWindows();
 
         // 통계 출력
         std::cout << "\n" << std::string(60, '=') << std::endl;
@@ -158,12 +163,13 @@ public:
 private:
     std::string createGStreamerPipeline(int sensor_id, int width, int height, int framerate, int flip_method = 0)
     {
+        // 1920x1080으로 캡처하여 센서 중앙 사용, 그 후 원하는 해상도로 스케일
         std::ostringstream pipeline;
         pipeline << "nvarguscamerasrc sensor-id=" << sensor_id << " ! "
-                 << "video/x-raw(memory:NVMM), width=(int)" << width << ", height=(int)" << height << ", "
+                 << "video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, "
                  << "framerate=(fraction)" << framerate << "/1, format=(string)NV12 ! "
                  << "nvvidconv flip-method=" << flip_method << " ! "
-                 << "video/x-raw, format=(string)BGRx ! "
+                 << "video/x-raw, width=(int)" << width << ", height=(int)" << height << ", format=(string)BGRx ! "
                  << "videoconvert ! "
                  << "video/x-raw, format=(string)BGR ! "
                  << "appsink drop=1";

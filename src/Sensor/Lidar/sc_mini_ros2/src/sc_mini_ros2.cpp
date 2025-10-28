@@ -532,7 +532,7 @@ int main(int argc, char **argv)
 		// ROS2 parameter declaration and getting
 		node->declare_parameter("baud_rate", 115200);
 		node->declare_parameter("frame_id", "laser_link");
-		node->declare_parameter("port", "/dev/ttyUSB0");
+		node->declare_parameter("port", "/dev/sc_mini");
 		
 		node->get_parameter("baud_rate", baud_rate);
 		node->get_parameter("frame_id", frame_id);

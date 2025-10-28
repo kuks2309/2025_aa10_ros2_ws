@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>YawControlTest</class>
+ <widget class="QDialog" name="YawControlTest">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>AA10 Yaw Control Test GUI</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox_mode">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>760</width>
+     <height>100</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Control Mode Selection</string>
+   </property>
+   <widget class="QRadioButton" name="radioButton_imu_control">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>IMU Control (0)</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_lane_control">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lane Control (1)</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_maze_control">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Maze Control (2)</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_steer_control">
+    <property name="geometry">
+     <rect>
+      <x>560</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steer Control (3)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_current_mode">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>65</y>
+      <width>700</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current Mode: Not Set</string>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+   </widget>
+  </widget>
+
+  <!-- IMU Control Mode Inputs -->
+  <widget class="QGroupBox" name="groupBox_imu">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>370</width>
+     <height>180</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>IMU Control Mode (0)</string>
+   </property>
+   <widget class="QLabel" name="label_target_angle">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Target Angle (deg):</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_target_angle">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>30</y>
+      <width>100</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0.0</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_send_target_angle">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>60</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_current_imu_angle">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>65</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Current IMU Angle: -- deg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_imu_error">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>95</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Error: -- deg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_imu_steering">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>125</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steering Output: -- deg</string>
+    </property>
+   </widget>
+  </widget>
+
+  <!-- Lane/Vision Control Mode Inputs -->
+  <widget class="QGroupBox" name="groupBox_vision">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>120</y>
+     <width>370</width>
+     <height>180</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Lane/Vision Control Mode (1)</string>
+   </property>
+   <widget class="QLabel" name="label_vision_xte">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Vision XTE:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_vision_xte">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>30</y>
+      <width>100</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0.0</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_send_vision_xte">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>60</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_vision_error">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>65</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Error: -- </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_vision_steering">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>95</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steering Output: -- deg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_vision_angle_limit">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>125</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Angle Limit: ±35 deg</string>
+    </property>
+   </widget>
+  </widget>
+
+  <!-- Maze Control Mode Inputs -->
+  <widget class="QGroupBox" name="groupBox_maze">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>310</y>
+     <width>370</width>
+     <height>180</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Maze Control Mode (2)</string>
+   </property>
+   <widget class="QLabel" name="label_maze_xte">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Maze XTE:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_maze_xte">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>30</y>
+      <width>100</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0.0</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_send_maze_xte">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>60</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_maze_error">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>65</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Error: -- </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_maze_steering">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>95</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steering Output: -- deg</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_maze_angle_limit">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>125</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Angle Limit: ±35 deg</string>
+    </property>
+   </widget>
+  </widget>
+
+  <!-- Steer Control Mode Inputs -->
+  <widget class="QGroupBox" name="groupBox_steer">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>310</y>
+     <width>370</width>
+     <height>180</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Steer Control Mode (3)</string>
+   </property>
+   <widget class="QLabel" name="label_steer_input">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>150</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Steer Input (Int16):</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_steer_input">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>30</y>
+      <width>100</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_send_steer">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>60</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_steer_output">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>65</y>
+      <width>330</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Direct Steering: -- </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_steer_info">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>95</y>
+      <width>330</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Direct steering control.
+Input value directly sets steering angle.</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+
+  <!-- Status and Output -->
+  <widget class="QGroupBox" name="groupBox_status">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>500</y>
+     <width>760</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>System Status</string>
+   </property>
+   <widget class="QLabel" name="label_ros_status">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>25</y>
+      <width>720</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ROS2 Status: Disconnected</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_steering_output">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>50</y>
+      <width>720</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Final Steering Output: -- deg</string>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+   </widget>
+  </widget>
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
