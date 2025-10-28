@@ -22,7 +22,7 @@ def generate_launch_description():
                 'Kp_imu_degree': 3.0,
                 'Ki_imu_degree': 0.0,
                 'Kd_imu_degree': 7.0,
-                'Kp_vision': 0.25,
+                'Kp_vision': 0.12,
                 'Kd_vision': 1.5,
                 'Ki_vision': 0.0,
                 'Kp_maze': 1.0,

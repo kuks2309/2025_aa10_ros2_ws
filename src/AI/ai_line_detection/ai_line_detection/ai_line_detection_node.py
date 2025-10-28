@@ -26,6 +26,11 @@ class AILineDetectionNode(Node):
         # Lane spacing learning (global to instance)
         self.learned_lane_spacing = None
 
+        # Previous frame lane positions for temporal continuity
+        self.prev_left_line_x = None
+        self.prev_right_line_x = None
+        self.search_window = 80  # Search within ±80 pixels of previous position
+
         # Parameters
         self.declare_parameter('model_path', 'weights/best.pt')
         self.declare_parameter('conf_threshold', 0.3)
@@ -230,7 +235,7 @@ class AILineDetectionNode(Node):
         return int(np.mean(individual_widths))
 
     def detect_lane_edges(self, mask, image_height):
-        """Detect left and right edges of lane(s) at y-axis center"""
+        """Detect left and right edges of lane(s) at y-axis center with temporal continuity"""
         if mask is None or np.sum(mask) == 0:
             return None
 
@@ -300,6 +305,40 @@ class AILineDetectionNode(Node):
             else:
                 # All remaining lanes are far enough apart
                 break
+
+        # Apply temporal continuity filter - prefer lines near previous positions
+        if self.prev_left_line_x is not None and self.prev_right_line_x is not None and len(lanes) >= 2:
+            lane_centers = [(l[0] + l[1]) // 2 for l in lanes]
+
+            # Find best match for left and right lines
+            best_left = None
+            best_right = None
+            best_left_dist = float('inf')
+            best_right_dist = float('inf')
+
+            for center in lane_centers:
+                # Distance to previous left line
+                left_dist = abs(center - self.prev_left_line_x)
+                if left_dist < best_left_dist and left_dist < self.search_window:
+                    best_left_dist = left_dist
+                    best_left = center
+
+                # Distance to previous right line
+                right_dist = abs(center - self.prev_right_line_x)
+                if right_dist < best_right_dist and right_dist < self.search_window:
+                    best_right_dist = right_dist
+                    best_right = center
+
+            # Filter lanes to only those near previous positions
+            if best_left is not None and best_right is not None and best_left != best_right:
+                filtered_lanes = []
+                for lane in lanes:
+                    center = (lane[0] + lane[1]) // 2
+                    if center == best_left or center == best_right:
+                        filtered_lanes.append(lane)
+
+                if len(filtered_lanes) == 2:
+                    lanes = filtered_lanes
 
         return lanes
 
@@ -375,13 +414,35 @@ class AILineDetectionNode(Node):
                 else:
                     lane_spacing = 340  # Default spacing
 
-                # Determine if detected line is on left or right side
-                if detected_line_center < w // 2:
+                # Determine if detected line is on left or right side using temporal continuity
+                is_left_line = False
+                is_right_line = False
+
+                # If we have previous positions, use them to determine which line this is
+                if self.prev_left_line_x is not None and self.prev_right_line_x is not None:
+                    dist_to_left = abs(detected_line_center - self.prev_left_line_x)
+                    dist_to_right = abs(detected_line_center - self.prev_right_line_x)
+
+                    # Choose based on which previous position is closer
+                    if dist_to_left < dist_to_right and dist_to_left < self.search_window:
+                        is_left_line = True
+                    elif dist_to_right < self.search_window:
+                        is_right_line = True
+                    else:
+                        # Too far from both - use image center as fallback
+                        is_left_line = detected_line_center < w // 2
+                        is_right_line = not is_left_line
+                else:
+                    # No previous position - use image center
+                    is_left_line = detected_line_center < w // 2
+                    is_right_line = not is_left_line
+
+                if is_left_line:
                     # Line on left side - create virtual right line
                     left_line_x = detected_line_center
                     right_line_x = detected_line_center + lane_spacing
                     is_virtual = True
-                else:
+                else:  # is_right_line
                     # Line on right side - create virtual left line
                     right_line_x = detected_line_center
                     left_line_x = detected_line_center - lane_spacing
@@ -424,6 +485,10 @@ class AILineDetectionNode(Node):
         # Draw lane center (between left and right lines)
         lane_center_x = None
         if left_line_x is not None and right_line_x is not None:
+            # Update previous frame positions for temporal continuity
+            self.prev_left_line_x = left_line_x
+            self.prev_right_line_x = right_line_x
+
             # Calculate lane center
             lane_center_x = (left_line_x + right_line_x) // 2
 

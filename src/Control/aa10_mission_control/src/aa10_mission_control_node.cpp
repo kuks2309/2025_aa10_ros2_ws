@@ -1,9 +1,8 @@
 #include "amap_powerpack_single_driver/msg/encoder_status.hpp"
+#include "amap_powerpack_single_driver/msg/steering_angle.hpp"
 #include "amap_powerpack_single_driver/msg/target_position_relative.hpp"
 #include "amap_powerpack_single_driver/msg/target_speed.hpp"
-#include "amap_powerpack_single_driver/msg/steering_angle.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "std_srvs/srv/trigger.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -14,23 +13,24 @@
 #include "std_msgs/msg/int16.hpp"
 #include "std_msgs/msg/int8.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include "tf2/utils.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include <cmath>
 #include <numeric>
 #include <vector>
 
-#define RAD2DEG(x) ((x)*180. / M_PI)
+#define RAD2DEG(x) ((x) * 180. / M_PI)
 #define DEG2RAD(x) ((x) / 180. * M_PI)
 
 // Yaw Control Modes (must match aa10_car_yaw_control definitions)
-#define IMU_CONTROL 0       // IMU-based yaw control
-#define LANE_CONTROL 1      // Vision-based lane following (uses /xte/vision from ai_line_detection)
-#define MAZE_CONTROL 2      // Maze navigation control
-#define STEER_CONTROL 3     // Direct steering angle control
+#define IMU_CONTROL 0   // IMU-based yaw control
+#define LANE_CONTROL 1  // Vision-based lane following (uses /xte/vision from ai_line_detection)
+#define MAZE_CONTROL 2  // Maze navigation control
+#define STEER_CONTROL 3 // Direct steering angle control
 
 // Additional mission control modes
-#define STOP 99             // Stop mode (not used by yaw_control)
+#define STOP 99 // Stop mode (not used by yaw_control)
 #define WALL_FOLLOWING 5
 #define OBSTACLE_DETECT 6
 
@@ -50,7 +50,7 @@ class MissionControlNode : public rclcpp::Node
         stop_line_position_ = 0.0;
         mission_flag_ = 0;
         start_mission_flag_ = 0; // Default: start from mission 0
-        end_mission_flag_ = 7;   // Default: end at mission 7
+        end_mission_flag_ = 100; // Default: end at mission 100
         run_flag_ = false;
         lane_status_left_ = false;   // false = CLEAR, true = BLOCKED
         lane_status_center_ = false; // false = CLEAR, true = BLOCKED
@@ -68,10 +68,22 @@ class MissionControlNode : public rclcpp::Node
         encoder_reset_requested_ = false;
         mission4_saved_angle_ = 0.0;
         mission4_angle_saved_ = false;
+        mission4_no_obstacle_count_ = 0;
+        mission4_obstacle_count_ = 0;
         mission5_start_position_mm_ = 0.0;
         mission5_position_sent_ = false;
-        mission6_start_position_mm_ = 0.0;
-        mission6_position_sent_ = false;
+        mission6_started_ = false;
+        mission6_encoder_reset_sent_ = false;
+        mission7_start_position_mm_ = 0.0;
+        mission7_position_sent_ = false;
+        mission8_start_position_mm_ = 0.0;
+        mission8_position_sent_ = false;
+        mission15_start_position_mm_ = 0.0;
+        mission15_position_sent_ = false;
+        mission21_start_position_mm_ = 0.0;
+        mission21_position_sent_ = false;
+        mission24_start_position_mm_ = 0.0;
+        mission24_position_sent_ = false;
 
         // Create subscribers for real hardware
         RCLCPP_INFO(this->get_logger(), "Starting in REAL HARDWARE mode");
@@ -120,9 +132,12 @@ class MissionControlNode : public rclcpp::Node
         car_control_speed_pub_ =
             this->create_publisher<amap_powerpack_single_driver::msg::TargetSpeed>("/car_control/target_speed", 5);
 
-        // Create steering angle publisher
+        // Create steering angle publisher (direct - may conflict with aa10_car_yaw_control)
         car_control_steering_pub_ =
             this->create_publisher<amap_powerpack_single_driver::msg::SteeringAngle>("/car_control/steering_angle", 5);
+
+        // Create steer input publisher for STEER_CONTROL mode (via aa10_car_yaw_control)
+        steer_input_pub_ = this->create_publisher<std_msgs::msg::Int16>("/xte/steer", 5);
 
         // Create position control publisher
         target_position_relative_pub_ =
@@ -280,13 +295,13 @@ class MissionControlNode : public rclcpp::Node
             lane_status_center_ = (center_str == "BLOCKED");
             lane_status_right_ = (right_str == "BLOCKED");
 
-            // case 7에서만 로그 출력
-            if (mission_flag_ == 7)
-            {
-                RCLCPP_INFO(this->get_logger(), "Lane Status Received: [%s, %s, %s] (Left, Center, Right)",
-                            lane_status_left_ ? "BLOCKED" : "CLEAR", lane_status_center_ ? "BLOCKED" : "CLEAR",
-                            lane_status_right_ ? "BLOCKED" : "CLEAR");
-            }
+            // 로그 출력 비활성화
+            // if (mission_flag_ == 7)
+            // {
+            //     RCLCPP_INFO(this->get_logger(), "Lane Status Received: [%s, %s, %s] (Left, Center, Right)",
+            //                 lane_status_left_ ? "BLOCKED" : "CLEAR", lane_status_center_ ? "BLOCKED" : "CLEAR",
+            //                 lane_status_right_ ? "BLOCKED" : "CLEAR");
+            // }
         }
     }
 
@@ -326,9 +341,8 @@ class MissionControlNode : public rclcpp::Node
         {
             // Main mission control logic
             double current_speed = 100.0; // Current speed based on mode
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
-                                 "Mission: %d | IMU: %.1f° | Speed: %.2f", mission_flag_,
-                                 imu_heading_angle_degree_, current_speed);
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Mission: %d | IMU: %.1f° | Speed: %.2f",
+                                 mission_flag_, imu_heading_angle_degree_, current_speed);
 
             // Simple mission example
             switch (mission_flag_)
@@ -337,7 +351,7 @@ class MissionControlNode : public rclcpp::Node
                 // Initialize mission - 출발 대기 (가림막 제거 대기)
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteeringAngle(0.0);
+                publishSteerInput(0);              // Use /xte/steer for STEER_CONTROL mode
                 publishSpeedReal(0);
                 RCLCPP_INFO_ONCE(this->get_logger(), "Mission 0: Waiting for barrier removal...");
 
@@ -384,8 +398,10 @@ class MissionControlNode : public rclcpp::Node
                         // Offset은 평균값의 음수 (보정된 값을 0으로 만들기 위해)
                         imu_angle_offset_ = -avg_angle;
                         imu_calibrated_ = true;
-                        RCLCPP_INFO(this->get_logger(), "IMU calibration complete! Average angle = %.2f°, Offset = %.2f° (from %zu samples)",
-                                    avg_angle, imu_angle_offset_, imu_calibration_samples_.size());
+                        RCLCPP_INFO(
+                            this->get_logger(),
+                            "IMU calibration complete! Average angle = %.2f°, Offset = %.2f° (from %zu samples)",
+                            avg_angle, imu_angle_offset_, imu_calibration_samples_.size());
 
                         // Publish offset to IMU node
                         std_msgs::msg::Float32 offset_msg;
@@ -405,7 +421,8 @@ class MissionControlNode : public rclcpp::Node
                     RCLCPP_INFO(this->get_logger(), "Barrier removed (detected=%s, distance=%.2fm)",
                                 obstacle_detected_ ? "true" : "false", obstacle_distance_);
                     RCLCPP_INFO(this->get_logger(), "IMU calibrated with offset=%.2f°", imu_angle_offset_);
-                    transitionToNextMission(3); // Move to mission 3 (10cm forward test)
+                    // transitionToNextMission(1); // Move to mission 3 (10cm forward test)
+                    transitionToNextMission(21); // Move to mission 3 (10cm forward test)
                 }
                 else
                 {
@@ -422,7 +439,7 @@ class MissionControlNode : public rclcpp::Node
                 // Lane control 활성화
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision control mode
-                publishSpeedReal(150);            // 주행 속도 설정
+                publishSpeedReal(340);            // 주행 속도 설정
 
                 // Stop line 검출 확인
                 if (stop_line_position_ > 0.0)
@@ -463,7 +480,7 @@ class MissionControlNode : public rclcpp::Node
                     mission2_stopped = true;
                 }
 
-                if ((this->now() - mission2_stop_time).seconds() > 0.5)
+                if ((this->now() - mission2_stop_time).seconds() > 1.0)
                 {
                     mission2_stopped = false; // Reset for next time
                     RCLCPP_INFO(this->get_logger(), "Mission 2 complete - Moving to next");
@@ -478,7 +495,7 @@ class MissionControlNode : public rclcpp::Node
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteeringAngle(0.0);         // Set steering to 0 degrees (straight)
+                publishSteerInput(0);              // Use /xte/steer for STEER_CONTROL mode (straight)
 
                 // 시작 위치 저장 (한 번만)
                 if (!mission3_position_sent_)
@@ -496,7 +513,7 @@ class MissionControlNode : public rclcpp::Node
                 if (traveled_distance < 100.0)
                 {
                     // 아직 목표 거리에 도달하지 않음 - 속도 50mm/s로 전진
-                    publishSpeedReal(130); // 50mm/s = 0.05m/s
+                    publishSpeedReal(100); // 50mm/s = 0.05m/s
                 }
                 else
                 {
@@ -523,8 +540,8 @@ class MissionControlNode : public rclcpp::Node
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL);
-                publishSteeringAngle(0.0);
-                publishSpeedReal(0); // 정지 상태에서 판단
+                publishSteerInput(0); // Use /xte/steer for STEER_CONTROL mode
+                publishSpeedReal(0);  // 정지 상태에서 판단
 
                 // 현재 IMU 각도 저장 (한 번만)
                 if (!mission4_angle_saved_)
@@ -534,128 +551,597 @@ class MissionControlNode : public rclcpp::Node
                     RCLCPP_INFO(this->get_logger(), "Mission 4: Saved reference angle = %.1f°", mission4_saved_angle_);
                 }
 
-                // 장애물 감지 여부에 따라 분기
-                if (!obstacle_detected_ || obstacle_distance_ > 0.5)
+                // 장애물 감지 여부 카운팅 (연속 검출 확인)
+                const int REQUIRED_COUNT = 5; // 연속 5회 검출 필요
+
+                if (!obstacle_detected_ || obstacle_distance_ > 1.8)
                 {
-                    // 장애물 없음 -> Mission 5 (직진 30cm)
-                    mission4_angle_saved_ = false; // Reset for next time
-                    RCLCPP_INFO(this->get_logger(),
-                                "Mission 4: No obstacle detected (distance=%.2fm) - Going straight 30cm",
-                                obstacle_distance_);
-                    transitionToNextMission(5);
+                    // 장애물 없음으로 판단
+                    mission4_no_obstacle_count_++;
+                    mission4_obstacle_count_ = 0; // 장애물 카운트 리셋
+
+                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 200,
+                                         "Mission 4: No obstacle (%d/%d) - distance=%.2fm", mission4_no_obstacle_count_,
+                                         REQUIRED_COUNT, obstacle_distance_);
+
+                    if (mission4_no_obstacle_count_ >= REQUIRED_COUNT)
+                    {
+                        // 연속 5회 이상 "장애물 없음" 확정 -> Mission 5 (직진 30cm)
+                        mission4_angle_saved_ = false;   // Reset for next time
+                        mission4_no_obstacle_count_ = 0; // Reset counter
+                        mission4_obstacle_count_ = 0;    // Reset counter
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 4: No obstacle confirmed (distance=%.2fm) - Going straight 30cm",
+                                    obstacle_distance_);
+                        transitionToNextMission(5);
+                    }
                 }
                 else
                 {
-                    // 장애물 있음 -> Mission 6 (yaw -30도로 회피하며 30cm)
-                    mission4_angle_saved_ = false; // Reset for next time
-                    RCLCPP_INFO(this->get_logger(),
-                                "Mission 4: Obstacle detected (distance=%.2fm) - Avoiding with yaw -30°",
-                                obstacle_distance_);
-                    transitionToNextMission(6);
+                    // 장애물 있음으로 판단
+                    mission4_obstacle_count_++;
+                    mission4_no_obstacle_count_ = 0; // 장애물 없음 카운트 리셋
+
+                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 200,
+                                         "Mission 4: Obstacle detected (%d/%d) - distance=%.2fm",
+                                         mission4_obstacle_count_, REQUIRED_COUNT, obstacle_distance_);
+
+                    if (mission4_obstacle_count_ >= REQUIRED_COUNT)
+                    {
+                        // 연속 5회 이상 "장애물 있음" 확정 -> Mission 6 (yaw -30도로 회피하며 30cm)
+                        mission4_angle_saved_ = false;   // Reset for next time
+                        mission4_no_obstacle_count_ = 0; // Reset counter
+                        mission4_obstacle_count_ = 0;    // Reset counter
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 4: Obstacle confirmed (distance=%.2fm) - Avoiding with yaw -30°",
+                                    obstacle_distance_);
+                        transitionToNextMission(10);
+                    }
                 }
                 break;
             }
 
             case 5:
             {
-                // 장애물 없음 - 직진 30cm 이동 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 5: Moving straight 30cm (no obstacle)");
+                // 비전 레인 제어로 1.4m 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 5: Lane following with vision control for 1.4m");
 
-                publishLaneControl(false);
-                publishControlMode(IMU_CONTROL);                 // IMU control mode
-                publishTargetAngle(mission4_saved_angle_);       // Maintain saved angle (straight)
-                publishSteeringAngle(mission4_saved_angle_);
+                publishLaneControl(true);
+                publishControlMode(LANE_CONTROL); // Vision-based lane control
 
                 // 시작 위치 저장 (한 번만)
                 if (!mission5_position_sent_)
                 {
                     mission5_start_position_mm_ = encoder_position_mm_;
                     mission5_position_sent_ = true;
-                    RCLCPP_INFO(this->get_logger(), "Mission 5 started at position: %.1fmm, target angle: %.1f°",
-                                encoder_position_mm_, mission4_saved_angle_);
+                    RCLCPP_INFO(this->get_logger(), "Mission 5 started at position: %.1fmm with vision lane control",
+                                encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
                 double traveled_distance = encoder_position_mm_ - mission5_start_position_mm_;
 
-                // 목표: 300mm (30cm) 이동
-                if (traveled_distance < 300.0)
+                // 목표: 1400mm (1.4m) 이동
+                if (traveled_distance < 1400.0)
                 {
-                    publishSpeedReal(200); // 50mm/s
+                    publishSpeedReal(350); // 주행 속도 설정
                 }
                 else
                 {
                     publishSpeedReal(0);
-                    RCLCPP_INFO(this->get_logger(), "Mission 5 complete: Traveled %.1fmm straight", traveled_distance);
+                    publishLaneControl(false);
+                    publishControlMode(STOP);
+                    RCLCPP_INFO(this->get_logger(), "Mission 5 complete: Traveled %.1fmm with lane control",
+                                traveled_distance);
                     mission5_position_sent_ = false;
-                    transitionToNextMission(7);
+                    transitionToNextMission(6); // Mission 6으로 전환 (정지 및 엔코더 리셋)
                 }
 
                 // 진행 상황 모니터링
                 RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 5: Traveled %.1f/300.0 mm, angle: %.1f°", traveled_distance,
-                                     imu_heading_angle_degree_);
+                                     "Mission 5: Traveled %.1f/1400.0 mm with vision lane control", traveled_distance);
                 break;
             }
 
             case 6:
             {
-                // 장애물 있음 - yaw -30도로 회피하며 30cm 이동 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 6: Moving 30cm with yaw -30° (avoiding obstacle)");
+                // 엔코더 리셋 확인 및 재시도
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 6: Resetting encoder until zero");
 
                 publishLaneControl(false);
-                publishControlMode(IMU_CONTROL); // IMU control mode
+                publishControlMode(STOP);
+                publishSpeedReal(0);
 
-                // 목표 각도: 저장된 각도 - 30도
-                double target_angle = mission4_saved_angle_ - 30.0;
-                // 0-360 범위로 정규화
-                while (target_angle < 0.0)
-                    target_angle += 360.0;
-                while (target_angle >= 360.0)
-                    target_angle -= 360.0;
-
-                publishTargetAngle(target_angle);
-
-                // 시작 위치 저장 (한 번만)
-                if (!mission6_position_sent_)
+                // Mission 6 시작 시간 기록
+                if (!mission6_started_)
                 {
-                    mission6_start_position_mm_ = encoder_position_mm_;
-                    mission6_position_sent_ = true;
-                    RCLCPP_INFO(this->get_logger(),
-                                "Mission 6 started at position: %.1fmm, reference: %.1f°, target: %.1f° (yaw -30°)",
-                                encoder_position_mm_, mission4_saved_angle_, target_angle);
+                    mission6_start_time_ = this->now();
+                    mission6_started_ = true;
+                    mission6_encoder_reset_sent_ = false;
+                    RCLCPP_INFO(this->get_logger(), "Mission 6: Started encoder reset process");
                 }
 
-                // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission6_start_position_mm_;
+                double elapsed_time = (this->now() - mission6_start_time_).seconds();
 
-                // 목표: 300mm (30cm) 이동
-                if (traveled_distance < 300.0)
+                // 0.2초마다 엔코더 값 확인
+                if (elapsed_time >= 0.2)
                 {
-                    publishSpeedReal(200); // 50mm/s
+                    // 엔코더 값이 0이 아니면 리셋 (절대값 50mm 이상)
+                    if (std::abs(encoder_position_mm_) > 50.0)
+                    {
+                        system("ros2 service call /car_control/reset_encoder std_srvs/srv/Trigger &");
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 6: Encoder not zero (%.1fmm) - Resetting again at %.2fs",
+                                    encoder_position_mm_, elapsed_time);
+                        mission6_start_time_ = this->now(); // 타이머 리셋
+                        elapsed_time = 0.0;
+                    }
+                    else
+                    {
+                        // 엔코더 값이 0에 가까우면 Mission 7로 전환
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 6: Encoder reset confirmed (%.1fmm) - Transitioning to Mission 7",
+                                    encoder_position_mm_);
+                        mission6_started_ = false;
+                        mission6_encoder_reset_sent_ = false;
+                        transitionToNextMission(7);
+                    }
                 }
                 else
                 {
-                    publishSpeedReal(0);
-                    RCLCPP_INFO(this->get_logger(), "Mission 6 complete: Traveled %.1fmm with yaw -30°",
-                                traveled_distance);
-                    mission6_position_sent_ = false;
-                    transitionToNextMission(7);
+                    // 첫 리셋 요청
+                    if (!mission6_encoder_reset_sent_)
+                    {
+                        system("ros2 service call /car_control/reset_encoder std_srvs/srv/Trigger &");
+                        mission6_encoder_reset_sent_ = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 6: Initial encoder reset requested");
+                    }
+                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 200,
+                                         "Mission 6: Waiting for encoder update... %.2fs (current=%.1fmm)",
+                                         elapsed_time, encoder_position_mm_);
                 }
-
-                // 진행 상황 모니터링
-                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 6: Traveled %.1f/300.0 mm, target: %.1f°, current: %.1f°",
-                                     traveled_distance, target_angle, imu_heading_angle_degree_);
                 break;
             }
 
             case 7:
-                // Mission 5 or 6 완료 후 최종 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 7: Final stop");
+            {
+                // 비전 레인 제어로 2m 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 7: Lane following with vision control for 2m");
+
+                publishLaneControl(true);
+                publishControlMode(LANE_CONTROL); // Vision-based lane control
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission7_position_sent_)
+                {
+                    mission7_start_position_mm_ = encoder_position_mm_;
+                    mission7_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 7 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission7_start_position_mm_;
+
+                // 목표: 2000mm (2m) 이동
+                if (traveled_distance < 2600.0)
+                {
+                    publishSpeedReal(330); // 주행 속도 설정
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishLaneControl(false);
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 7 complete: Traveled %.1fmm with lane control",
+                                traveled_distance);
+                    mission7_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(8);      // Mission 100로 전환
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 7: Traveled %.1f/2000.0 mm with vision lane control", traveled_distance);
+                break;
+            }
+
+            case 8:
+            {
+                // 조향각 17도로 50cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 8: Moving 50cm with steering angle 17 degrees");
 
                 publishLaneControl(false);
-                publishControlMode(STOP);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(-20);            // 조향각 17도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission8_position_sent_)
+                {
+                    mission8_start_position_mm_ = encoder_position_mm_;
+                    mission8_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 8 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission8_start_position_mm_;
+
+                // 목표: 500mm (50cm) 이동
+                if (traveled_distance < 1000.0)
+                {
+                    publishSpeedReal(200); // 주행 속도
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(0); // 조향각 17도
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 12 complete: Traveled %.1fmm with 17° steering",
+                                traveled_distance);
+                    mission8_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(100);    // Mission 15로 전환
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 12: Traveled %.1f/500.0 mm with 17° steering", traveled_distance);
+                break;
+            }
+
+            case 10:
+            {
+                // 0.05m/s (50mm/s) 속도로 10cm 전진 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 3: Moving 10cm forward at 50 mm/s");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(15);             // Use /xte/steer for STEER_CONTROL mode (straight)
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission3_position_sent_)
+                {
+                    mission3_start_position_mm_ = encoder_position_mm_;
+                    mission3_position_sent_ = true;
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 3 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission3_start_position_mm_;
+
+                // 목표: 100mm (10cm) 이동
+                if (traveled_distance < 1500.0)
+                {
+                    // 아직 목표 거리에 도달하지 않음 - 속도 50mm/s로 전진
+                    publishSpeedReal(280); // 50mm/s = 0.05m/s
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSteerInput(0);
+                    publishSpeedReal(0);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 3 complete: Traveled %.1fmm, final position: %.1fmm",
+                                traveled_distance, encoder_position_mm_);
+                    mission3_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(11);
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 3: Traveled %.1f/100.0 mm, speed: %.1f mm/s", traveled_distance,
+                                     encoder_speed_mms_);
+                break;
+            }
+
+            case 11:
+            {
+                // Mission 5 or 6 완료 후 비전 레인 제어로 50cm 주행
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 7: Lane following with vision control for 50cm");
+
+                publishLaneControl(true);
+                publishControlMode(LANE_CONTROL); // Vision-based lane control
+                publishSpeedReal(350);            // 주행 속도 설정
+                // 시작 위치 저장 (한 번만)
+                if (!mission7_position_sent_)
+                {
+                    mission7_start_position_mm_ = encoder_position_mm_;
+                    mission7_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 7 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission7_start_position_mm_;
+
+                // 목표: 500mm (50cm) 이동
+                if (traveled_distance < 1000.0)
+                {
+                    publishSpeedReal(350); // 주행 속도 설정
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishLaneControl(false);
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 7 complete: Traveled %.1fmm with lane control",
+                                traveled_distance);
+                    mission7_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(12);     // 최종 정지
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 7: Traveled %.1f/500.0 mm with vision lane control", traveled_distance);
+                break;
+            }
+
+            case 12:
+            {
+                // 조향각 17도로 50cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 8: Moving 50cm with steering angle 17 degrees");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(15);             // 조향각 17도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission8_position_sent_)
+                {
+                    mission8_start_position_mm_ = encoder_position_mm_;
+                    mission8_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 8 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission8_start_position_mm_;
+
+                // 목표: 500mm (50cm) 이동
+                if (traveled_distance < 500.0)
+                {
+                    publishSpeedReal(200); // 주행 속도
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(0); // 조향각 17도
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 12 complete: Traveled %.1fmm with 17° steering",
+                                traveled_distance);
+                    mission8_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(15);     // Mission 15로 전환
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 12: Traveled %.1f/500.0 mm with 17° steering", traveled_distance);
+                break;
+            }
+
+            case 15:
+            {
+                // 정지선까지 비전 레인 제어로 주행
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 15: Lane following with vision control until stop line");
+
+                publishLaneControl(true);
+                publishControlMode(LANE_CONTROL); // Vision-based lane control
+                publishSpeedReal(350);            // 주행 속도 설정
+
+                // 시작 위치 저장 및 정지선 데이터 초기화 (한 번만)
+                if (!mission15_position_sent_)
+                {
+                    mission15_start_position_mm_ = encoder_position_mm_;
+                    mission15_position_sent_ = true;
+                    stop_line_position_ = 0.0; // 이전 정지선 데이터 초기화
+                    RCLCPP_INFO(this->get_logger(), "Mission 15 started at position: %.1fmm, stop line data reset",
+                                encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission15_start_position_mm_;
+
+                // 최소 2000mm (2m) 주행 전에는 정지선 검출 무시
+                if (traveled_distance < 2000.0)
+                {
+                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                         "Mission 15: Traveled %.1f/2000.0 mm, ignoring stop line", traveled_distance);
+                }
+                else
+                {
+                    // 2m 이상 주행 후 정지선 검출 확인
+                    if (stop_line_position_ > 0.0 && stop_line_position_ > 40.0)
+                    {
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 15: Stop line detected close (y=%.1f px, traveled=%.1fmm) - Stopping!",
+                                    stop_line_position_, traveled_distance);
+                        publishLaneControl(false);
+                        publishControlMode(STOP);
+                        publishSpeedReal(0);
+                        mission15_position_sent_ = false; // Reset for next time
+                        transitionToNextMission(100);     // 최종 정지
+                    }
+                    else
+                    {
+                        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                             "Mission 15: Traveled %.1fmm, waiting for stop line (y=%.1f px)",
+                                             traveled_distance, stop_line_position_);
+                    }
+                }
+                break;
+            }
+
+            case 20: // 자세 제어 벽과 일치하게 각도 유지
+
+                break;
+
+            case 21:
+            {
+                // 조향각 20도로 30cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 21: Moving 30cm with steering angle 20 degrees");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(20);             // 조향각 20도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission21_position_sent_)
+                {
+                    mission21_start_position_mm_ = encoder_position_mm_;
+                    mission21_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 21 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission21_start_position_mm_;
+
+                // 목표: 300mm (30cm) 이동
+                if (traveled_distance < 500.0)
+                {
+                    publishSpeedReal(150); // 주행 속도 200mm/s
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(20); // 조향각 20도
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 21 complete: Traveled %.1fmm with 20° steering",
+                                traveled_distance);
+                    mission21_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(22);      // 최종 정지
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 21: Traveled %.1f/300.0 mm with 20° steering", traveled_distance);
+                break;
+            }
+
+            case 22:
+            {
+                // 조향각 20도로 30cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 21: Moving 30cm with steering angle 20 degrees");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(-25);            // 조향각 20도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission21_position_sent_)
+                {
+                    mission21_start_position_mm_ = encoder_position_mm_;
+                    mission21_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 21 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission21_start_position_mm_;
+
+                // 목표: 300mm (30cm) 이동
+                if (traveled_distance < 500.0)
+                {
+                    publishSpeedReal(150); // 주행 속도 200mm/s
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(20); // 조향각 20도
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 21 complete: Traveled %.1fmm with 20° steering",
+                                traveled_distance);
+                    mission21_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(23);      // 최종 정지
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 21: Traveled %.1f/300.0 mm with 20° steering", traveled_distance);
+                break;
+            }
+
+            case 23:
+            {
+                // 라이다 장애물 50cm 앞에서 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 23: Lane following until obstacle at 50cm");
+
+                publishLaneControl(true);
+                publishControlMode(LANE_CONTROL); // Vision-based lane control
+
+                // 장애물까지 거리가 50cm(0.5m)보다 크면 주행
+                if (obstacle_distance_ > 0.6)
+                {
+                    publishSpeedReal(250); // 주행 속도 설정
+                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                         "Mission 23: Obstacle distance %.2fm, continuing", obstacle_distance_);
+                }
+                else
+                {
+                    // 장애물이 50cm 이내 - 정지
+                    publishSpeedReal(0);
+                    publishLaneControl(false);
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 23 complete: Stopped at obstacle distance %.2fm",
+                                obstacle_distance_);
+                    transitionToNextMission(24); // 최종 정지
+                }
+
+                break;
+            }
+
+            case 24:
+            {
+                // 조향각 -35도로 45cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 24: Moving 45cm with steering angle -35 degrees");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(-35);            // 조향각 -35도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission24_position_sent_)
+                {
+                    mission24_start_position_mm_ = encoder_position_mm_;
+                    mission24_position_sent_ = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 24 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission24_start_position_mm_;
+
+                // 목표: 450mm (45cm) 이동
+                if (traveled_distance < 450.0)
+                {
+                    publishSpeedReal(150); // 주행 속도 150mm/s
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(0); // 조향각 0도로 복귀
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 24 complete: Traveled %.1fmm with -35° steering",
+                                traveled_distance);
+                    mission24_position_sent_ = false; // Reset for next time
+                    transitionToNextMission(100);     // 최종 정지
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 24: Traveled %.1f/450.0 mm with -35° steering", traveled_distance);
+                break;
+            }
+
+            case 100:
                 publishSpeedReal(0);
                 break;
 
@@ -736,6 +1222,14 @@ class MissionControlNode : public rclcpp::Node
         RCLCPP_DEBUG(this->get_logger(), "Steering angle command: %.1f degrees", angle_degree);
     }
 
+    void publishSteerInput(int steer_angle)
+    {
+        std_msgs::msg::Int16 msg;
+        msg.data = steer_angle;
+        steer_input_pub_->publish(msg);
+        RCLCPP_DEBUG(this->get_logger(), "Steer input for STEER_CONTROL mode: %d degrees", steer_angle);
+    }
+
     void publishLaneControl(bool enable)
     {
         auto msg = std_msgs::msg::Bool();
@@ -797,12 +1291,26 @@ class MissionControlNode : public rclcpp::Node
     bool encoder_reset_requested_;      // Flag to track if encoder reset was requested
 
     // Mission 4, 5, 6 control data
-    double mission4_saved_angle_;       // Saved IMU angle at mission 4 (reference angle)
-    bool mission4_angle_saved_;         // Flag to track if angle was saved
-    double mission5_start_position_mm_; // Starting position for mission 5
-    bool mission5_position_sent_;       // Flag to track if position command was sent
-    double mission6_start_position_mm_; // Starting position for mission 6
-    bool mission6_position_sent_;       // Flag to track if position command was sent
+    double mission4_saved_angle_;        // Saved IMU angle at mission 4 (reference angle)
+    bool mission4_angle_saved_;          // Flag to track if angle was saved
+    int mission4_no_obstacle_count_;     // Counter for consecutive "no obstacle" detections
+    int mission4_obstacle_count_;        // Counter for consecutive "obstacle" detections
+    rclcpp::Time mission4_start_time_;   // Mission 4 start time for minimum wait period
+    double mission5_start_position_mm_;  // Starting position for mission 5
+    bool mission5_position_sent_;        // Flag to track if position command was sent
+    rclcpp::Time mission6_start_time_;   // Mission 6 start time for 0.5s stop
+    bool mission6_started_;              // Mission 6 started flag
+    bool mission6_encoder_reset_sent_;   // Mission 6 encoder reset sent flag
+    double mission7_start_position_mm_;  // Starting position for mission 7
+    bool mission7_position_sent_;        // Flag to track if position command was sent
+    double mission8_start_position_mm_;  // Starting position for mission 8
+    bool mission8_position_sent_;        // Flag to track if position command was sent
+    double mission15_start_position_mm_; // Starting position for mission 15
+    bool mission15_position_sent_;       // Flag to track if position command was sent
+    double mission21_start_position_mm_; // Starting position for mission 21
+    bool mission21_position_sent_;       // Flag to track if position command was sent
+    double mission24_start_position_mm_; // Starting position for mission 24
+    bool mission24_position_sent_;       // Flag to track if position command was sent
 
     // ==================== Mission Control ====================
     int mission_flag_;       // Current mission state
@@ -830,14 +1338,15 @@ class MissionControlNode : public rclcpp::Node
     rclcpp::Publisher<amap_powerpack_single_driver::msg::TargetSpeed>::SharedPtr
         car_control_speed_pub_; // Speed command (Real hardware)
     rclcpp::Publisher<amap_powerpack_single_driver::msg::SteeringAngle>::SharedPtr
-        car_control_steering_pub_;                                             // Steering angle command
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr lane_control_flag_pub_;  // Lane control enable/disable
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_angle_pub_;    // Target angle for IMU control
+        car_control_steering_pub_;                                            // Steering angle command (direct)
+    rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr steer_input_pub_;      // Steer input for STEER_CONTROL mode
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr lane_control_flag_pub_; // Lane control enable/disable
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_angle_pub_;   // Target angle for IMU control
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
         target_angular_velocity_pub_;                                       // Target angular velocity for STEER_CONTROL
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr obstacle_enable_pub_; // Obstacle detection enable/disable
     rclcpp::Publisher<amap_powerpack_single_driver::msg::TargetPositionRelative>::SharedPtr
-        target_position_relative_pub_;                                     // Relative position control
+        target_position_relative_pub_;                                      // Relative position control
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr imu_offset_pub_;   // IMU angle offset
     rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr mission_status_pub_; // Mission status for GUI
 
