@@ -296,8 +296,8 @@ class AILineDetectionNode(Node):
                     min_distance = distance
                     min_idx = i
 
-            # If the closest pair is less than 150px apart, merge them
-            if min_distance < 150:
+            # If the closest pair is less than 200px apart, merge them
+            if min_distance < 200:
                 # Merge lanes[min_idx] and lanes[min_idx + 1]
                 merged_lane = (lanes[min_idx][0], lanes[min_idx + 1][1])
                 new_lanes = lanes[:min_idx] + [merged_lane] + lanes[min_idx + 2:]
@@ -311,34 +311,31 @@ class AILineDetectionNode(Node):
             lane_centers = [(l[0] + l[1]) // 2 for l in lanes]
 
             # Find best match for left and right lines
-            best_left = None
-            best_right = None
+            best_left_idx = None
+            best_right_idx = None
             best_left_dist = float('inf')
             best_right_dist = float('inf')
 
-            for center in lane_centers:
+            for idx, center in enumerate(lane_centers):
                 # Distance to previous left line
                 left_dist = abs(center - self.prev_left_line_x)
                 if left_dist < best_left_dist and left_dist < self.search_window:
                     best_left_dist = left_dist
-                    best_left = center
+                    best_left_idx = idx
 
                 # Distance to previous right line
                 right_dist = abs(center - self.prev_right_line_x)
                 if right_dist < best_right_dist and right_dist < self.search_window:
                     best_right_dist = right_dist
-                    best_right = center
+                    best_right_idx = idx
 
             # Filter lanes to only those near previous positions
-            if best_left is not None and best_right is not None and best_left != best_right:
-                filtered_lanes = []
-                for lane in lanes:
-                    center = (lane[0] + lane[1]) // 2
-                    if center == best_left or center == best_right:
-                        filtered_lanes.append(lane)
-
-                if len(filtered_lanes) == 2:
-                    lanes = filtered_lanes
+            if best_left_idx is not None and best_right_idx is not None and best_left_idx != best_right_idx:
+                # Keep only the two best matching lanes
+                filtered_lanes = [lanes[best_left_idx], lanes[best_right_idx]]
+                # Sort by x position (left to right)
+                filtered_lanes.sort(key=lambda l: (l[0] + l[1]) // 2)
+                lanes = filtered_lanes
 
         return lanes
 
@@ -402,17 +399,13 @@ class AILineDetectionNode(Node):
 
         if lines is not None and len(lines) > 0:
             if len(lines) == 1:
-                # Single line detected - create virtual second line
+                # Single line detected - offset by half of lane spacing (440px / 2 = 220px)
                 line_left, line_right = lines[0]
                 detected_line_center = (line_left + line_right) // 2
 
-                # Use learned lane spacing if available
-                if self.learned_lane_spacing is not None:
-                    lane_spacing = self.learned_lane_spacing
-                elif line_width > 0:
-                    lane_spacing = int(line_width * 20)  # 20x line width
-                else:
-                    lane_spacing = 340  # Default spacing
+                # Fixed lane spacing
+                lane_spacing = 440
+                half_spacing = 220
 
                 # Determine if detected line is on left or right side using temporal continuity
                 is_left_line = False
@@ -438,12 +431,12 @@ class AILineDetectionNode(Node):
                     is_right_line = not is_left_line
 
                 if is_left_line:
-                    # Line on left side - create virtual right line
+                    # Left line detected - lane center is 200px to the right
                     left_line_x = detected_line_center
                     right_line_x = detected_line_center + lane_spacing
                     is_virtual = True
                 else:  # is_right_line
-                    # Line on right side - create virtual left line
+                    # Right line detected - lane center is 200px to the left
                     right_line_x = detected_line_center
                     left_line_x = detected_line_center - lane_spacing
                     is_virtual = True

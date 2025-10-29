@@ -2,6 +2,7 @@
 #include "amap_powerpack_single_driver/msg/steering_angle.hpp"
 #include "amap_powerpack_single_driver/msg/target_position_relative.hpp"
 #include "amap_powerpack_single_driver/msg/target_speed.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -16,6 +17,9 @@
 #include "std_srvs/srv/trigger.hpp"
 #include "tf2/utils.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
+#include <array>
 #include <cmath>
 #include <numeric>
 #include <vector>
@@ -34,10 +38,22 @@
 #define WALL_FOLLOWING 5
 #define OBSTACLE_DETECT 6
 
+// SLAM Pose structure
+struct SlamPose
+{
+    double x;       // Position X in map frame (meters)
+    double y;       // Position Y in map frame (meters)
+    double yaw_rad; // Yaw angle in map frame (radians)
+
+    SlamPose() : x(0.0), y(0.0), yaw_rad(0.0)
+    {
+    }
+};
+
 class MissionControlNode : public rclcpp::Node
 {
   public:
-    MissionControlNode() : Node("mission_control_node")
+    MissionControlNode() : Node("mission_control_node"), tf_buffer_(this->get_clock()), tf_listener_(tf_buffer_)
     {
         // Parameters for real hardware
         this->declare_parameter("imu_topic", "/handsfree/imu_yaw_correction_degree");
@@ -55,6 +71,9 @@ class MissionControlNode : public rclcpp::Node
         lane_status_left_ = false;   // false = CLEAR, true = BLOCKED
         lane_status_center_ = false; // false = CLEAR, true = BLOCKED
         lane_status_right_ = false;  // false = CLEAR, true = BLOCKED
+        // slam_pose_ initialized by struct constructor
+        slam_pose_last_update_ = this->now();
+        slam_pose_received_ = false;
         obstacle_distance_ = 0.0;
         obstacle_detected_ = false;
         imu_angle_offset_ = 0.0;
@@ -63,27 +82,17 @@ class MissionControlNode : public rclcpp::Node
         imu_calibration_samples_.clear();
         encoder_position_mm_ = 0.0;
         encoder_speed_mms_ = 0.0;
-        mission3_start_position_mm_ = 0.0;
-        mission3_position_sent_ = false;
         encoder_reset_requested_ = false;
         mission4_saved_angle_ = 0.0;
         mission4_angle_saved_ = false;
         mission4_no_obstacle_count_ = 0;
         mission4_obstacle_count_ = 0;
-        mission5_start_position_mm_ = 0.0;
-        mission5_position_sent_ = false;
         mission6_started_ = false;
         mission6_encoder_reset_sent_ = false;
-        mission7_start_position_mm_ = 0.0;
-        mission7_position_sent_ = false;
-        mission8_start_position_mm_ = 0.0;
-        mission8_position_sent_ = false;
-        mission15_start_position_mm_ = 0.0;
-        mission15_position_sent_ = false;
-        mission21_start_position_mm_ = 0.0;
-        mission21_position_sent_ = false;
-        mission24_start_position_mm_ = 0.0;
-        mission24_position_sent_ = false;
+
+        // Initialize mission arrays
+        mission_start_position_mm_.fill(0.0);
+        mission_position_sent_.fill(false);
 
         // Create subscribers for real hardware
         RCLCPP_INFO(this->get_logger(), "Starting in REAL HARDWARE mode");
@@ -107,6 +116,8 @@ class MissionControlNode : public rclcpp::Node
         obstacle_detected_sub_ = this->create_subscription<std_msgs::msg::Bool>(
             "/obstacle/detected", 10,
             std::bind(&MissionControlNode::obstacleDetectedCallback, this, std::placeholders::_1));
+
+        // SLAM Toolbox pose output location (requested at line 113)
 
         encoder_status_sub_ = this->create_subscription<amap_powerpack_single_driver::msg::EncoderStatus>(
             "/car_control/encoder_status", 10,
@@ -139,6 +150,9 @@ class MissionControlNode : public rclcpp::Node
         // Create steer input publisher for STEER_CONTROL mode (via aa10_car_yaw_control)
         steer_input_pub_ = this->create_publisher<std_msgs::msg::Int16>("/xte/steer", 5);
 
+        // Create vision XTE offset publisher
+        vision_xte_offset_pub_ = this->create_publisher<std_msgs::msg::Float32>("/xte/vision_offset", 5);
+
         // Create position control publisher
         target_position_relative_pub_ =
             this->create_publisher<amap_powerpack_single_driver::msg::TargetPositionRelative>(
@@ -150,6 +164,9 @@ class MissionControlNode : public rclcpp::Node
         // Create mission status publisher for GUI
         mission_status_pub_ = this->create_publisher<std_msgs::msg::Int16>("/mission_control/mission_flag", 5);
 
+        // Create SLAM command publisher
+        slam_command_pub_ = this->create_publisher<std_msgs::msg::String>("/slam_command", 5);
+
         // Timer for main control loop
         timer_ = this->create_wall_timer(std::chrono::milliseconds(100), // 10Hz
                                          std::bind(&MissionControlNode::controlLoop, this));
@@ -160,7 +177,7 @@ class MissionControlNode : public rclcpp::Node
     ~MissionControlNode()
     {
         // Stop the robot when node is shutting down
-        RCLCPP_INFO(this->get_logger(), "Shutting down - stopping vehicle");
+        RCLCPP_INFO(this->get_logger(), "Shutting down - stopping vehicle and SLAM Toolbox");
 
         // Send STOP mode to aa10_car_yaw_control
         publishControlMode(STOP);
@@ -171,8 +188,11 @@ class MissionControlNode : public rclcpp::Node
         // Also disable lane control
         publishLaneControl(false);
 
+        // Stop SLAM Toolbox
+        slamToolboxStop();
+
         // Give time for messages to be sent
-        rclcpp::sleep_for(std::chrono::milliseconds(100));
+        rclcpp::sleep_for(std::chrono::milliseconds(200));
     }
 
   private:
@@ -194,10 +214,15 @@ class MissionControlNode : public rclcpp::Node
         camera_real_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             camera_topic, 10, std::bind(&MissionControlNode::cameraRealCallback, this, std::placeholders::_1));
 
+        // SLAM Toolbox pose subscriber (geometry_msgs/PoseWithCovarianceStamped)
+        slam_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "/pose", 10, std::bind(&MissionControlNode::slamPoseCallback, this, std::placeholders::_1));
+
         RCLCPP_INFO(this->get_logger(), "Real hardware subscribers created");
         RCLCPP_INFO(this->get_logger(), "IMU topic: %s", imu_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "Lidar topic: %s", lidar_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "Camera topic: %s", camera_topic.c_str());
+        RCLCPP_INFO(this->get_logger(), "SLAM Pose topic: /pose");
     }
 
     // Real hardware callbacks
@@ -236,6 +261,65 @@ class MissionControlNode : public rclcpp::Node
         { // Log every 30 frames (~1 second at 30Hz)
             RCLCPP_DEBUG(this->get_logger(), "Real Camera image received: %dx%d, encoding: %s", msg->width, msg->height,
                          msg->encoding.c_str());
+        }
+    }
+
+    void slamPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+    {
+        // SLAM Toolbox pose (map frame)
+        slam_pose_.x = msg->pose.pose.position.x;
+        slam_pose_.y = msg->pose.pose.position.y;
+
+        // Extract yaw from quaternion
+        tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z,
+                          msg->pose.pose.orientation.w);
+        tf2::Matrix3x3 m(q);
+        double roll, pitch, yaw;
+        m.getRPY(roll, pitch, yaw);
+        slam_pose_.yaw_rad = yaw;
+
+        // Update last received time
+        slam_pose_last_update_ = this->now();
+        slam_pose_received_ = true;
+
+        // Output SLAM pose in map frame (throttled to 1Hz) with mission number
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                             "Mission %d | SLAM Pose (map): x=%.3f, y=%.3f, yaw=%.3f°", mission_flag_, slam_pose_.x,
+                             slam_pose_.y, RAD2DEG(slam_pose_.yaw_rad));
+
+        // Transform to base_link frame and output (throttled to 1Hz)
+        try
+        {
+            // Get transform from map to base_link
+            geometry_msgs::msg::TransformStamped transform_stamped =
+                tf_buffer_.lookupTransform("base_link", "map", tf2::TimePointZero);
+
+            // Create a point in map frame (current SLAM pose)
+            geometry_msgs::msg::PointStamped point_map;
+            point_map.header.frame_id = "map";
+            point_map.header.stamp = this->now();
+            point_map.point.x = slam_pose_.x;
+            point_map.point.y = slam_pose_.y;
+            point_map.point.z = 0.0;
+
+            // Transform to base_link frame
+            geometry_msgs::msg::PointStamped point_base_link;
+            tf2::doTransform(point_map, point_base_link, transform_stamped);
+
+            // Extract yaw in base_link frame
+            tf2::Quaternion q_base(transform_stamped.transform.rotation.x, transform_stamped.transform.rotation.y,
+                                   transform_stamped.transform.rotation.z, transform_stamped.transform.rotation.w);
+            tf2::Matrix3x3 m_base(q_base);
+            double roll_base, pitch_base, yaw_base;
+            m_base.getRPY(roll_base, pitch_base, yaw_base);
+
+            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                                 "Mission %d | SLAM Pose (base_link): x=%.3f, y=%.3f, yaw=%.3f°", mission_flag_,
+                                 point_base_link.point.x, point_base_link.point.y, RAD2DEG(yaw_base));
+        }
+        catch (tf2::TransformException& ex)
+        {
+            RCLCPP_DEBUG(this->get_logger(), "Could not transform map to base_link: %s", ex.what());
         }
     }
 
@@ -339,10 +423,14 @@ class MissionControlNode : public rclcpp::Node
 
         if (run_flag_)
         {
-            // Main mission control logic
-            double current_speed = 100.0; // Current speed based on mode
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Mission: %d | IMU: %.1f° | Speed: %.2f",
-                                 mission_flag_, imu_heading_angle_degree_, current_speed);
+            // Main mission control logic - 상태 로그 출력 (Mission 100 제외)
+            if (mission_flag_ != 100)
+            {
+                double current_speed = 100.0; // Current speed based on mode
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                                     "Mission: %d | IMU: %.1f° | Speed: %.2f", mission_flag_, imu_heading_angle_degree_,
+                                     current_speed);
+            }
 
             // Simple mission example
             switch (mission_flag_)
@@ -353,6 +441,7 @@ class MissionControlNode : public rclcpp::Node
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
                 publishSteerInput(0);              // Use /xte/steer for STEER_CONTROL mode
                 publishSpeedReal(0);
+                publishVisionXteOffset(0.0); // Initialize vision offset to 0
                 RCLCPP_INFO_ONCE(this->get_logger(), "Mission 0: Waiting for barrier removal...");
 
                 // Encoder 리셋 (한 번만 호출)
@@ -421,8 +510,8 @@ class MissionControlNode : public rclcpp::Node
                     RCLCPP_INFO(this->get_logger(), "Barrier removed (detected=%s, distance=%.2fm)",
                                 obstacle_detected_ ? "true" : "false", obstacle_distance_);
                     RCLCPP_INFO(this->get_logger(), "IMU calibrated with offset=%.2f°", imu_angle_offset_);
-                    // transitionToNextMission(1); // Move to mission 3 (10cm forward test)
-                    transitionToNextMission(21); // Move to mission 3 (10cm forward test)
+                    transitionToNextMission(1); // Move to mission 3 (10cm forward test)
+                    // transitionToNextMission(21); // Move to mission
                 }
                 else
                 {
@@ -439,7 +528,8 @@ class MissionControlNode : public rclcpp::Node
                 // Lane control 활성화
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision control mode
-                publishSpeedReal(340);            // 주행 속도 설정
+                publishSpeedReal(280);            // 주행 속도 설정
+                publishVisionXteOffset(0.0);      // Vision offset 0 (중앙)
 
                 // Stop line 검출 확인
                 if (stop_line_position_ > 0.0)
@@ -452,6 +542,7 @@ class MissionControlNode : public rclcpp::Node
                     {
                         RCLCPP_INFO(this->get_logger(), "Stop line detected close (y=%.1f px) - Stopping!",
                                     stop_line_position_);
+                        publishVisionXteOffset(0.0); // Reset vision offset
                         transitionToNextMission(2);
                     }
                     else
@@ -490,46 +581,108 @@ class MissionControlNode : public rclcpp::Node
 
             case 3:
             {
-                // 0.05m/s (50mm/s) 속도로 10cm 전진 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 3: Moving 10cm forward at 50 mm/s");
+                // 0.05m/s (50mm/s) 속도로 10cm 전진 후 정지, SLAM Toolbox 시작
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 3: Moving 10cm forward at 50 mm/s, then start SLAM");
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
                 publishSteerInput(0);              // Use /xte/steer for STEER_CONTROL mode (straight)
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission3_position_sent_)
+                if (!mission_position_sent_[3])
                 {
-                    mission3_start_position_mm_ = encoder_position_mm_;
-                    mission3_position_sent_ = true;
+                    mission_start_position_mm_[3] = encoder_position_mm_;
+                    mission_position_sent_[3] = true;
 
                     RCLCPP_INFO(this->get_logger(), "Mission 3 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission3_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[3];
 
-                // 목표: 100mm (10cm) 이동
-                if (traveled_distance < 100.0)
+                // 목표: 100mm (10cm) 이동 (관성 보정: 95mm에서 정지 명령)
+                if (traveled_distance < 300.0)
                 {
                     // 아직 목표 거리에 도달하지 않음 - 속도 50mm/s로 전진
-                    publishSpeedReal(100); // 50mm/s = 0.05m/s
+                    publishSpeedReal(130); // 50mm/s = 0.05m/s
+
+                    // 진행 상황 모니터링
+                    RCLCPP_INFO_THROTTLE(
+                        this->get_logger(), *this->get_clock(), 500,
+                        "Mission 3: Traveled %.1f/95.0 mm (target: 100mm with overshoot), speed: %.1f mm/s",
+                        traveled_distance, encoder_speed_mms_);
                 }
                 else
                 {
-                    // 목표 거리 도달 - 정지
+                    // 목표 거리 도달 - 정지 후 SLAM 시작
                     publishSpeedReal(0);
 
-                    RCLCPP_INFO(this->get_logger(), "Mission 3 complete: Traveled %.1fmm, final position: %.1fmm",
-                                traveled_distance, encoder_position_mm_);
-                    mission3_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(4);
-                }
+                    // SLAM 시작 명령 전송 (한 번만)
+                    static bool slam_command_sent = false;
+                    static rclcpp::Time slam_start_time = this->now();
+                    static rclcpp::Time slam_check_start_time = this->now();
 
-                // 진행 상황 모니터링
-                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 3: Traveled %.1f/100.0 mm, speed: %.1f mm/s", traveled_distance,
-                                     encoder_speed_mms_);
+                    if (!slam_command_sent)
+                    {
+                        // SLAM 시작 전 pose 수신 플래그 초기화
+                        slam_pose_received_ = false;
+
+                        slamToolboxStart();
+                        slam_start_time = this->now();
+                        slam_check_start_time = this->now();
+                        slam_command_sent = true;
+
+                        RCLCPP_INFO(this->get_logger(),
+                                    "Mission 3: Stopped at %.1fmm. SLAM Toolbox START command sent.",
+                                    encoder_position_mm_);
+                    }
+
+                    auto elapsed_time = (this->now() - slam_start_time).seconds();
+                    auto time_since_last_pose = (this->now() - slam_pose_last_update_).seconds();
+
+                    // SLAM 실행 확인: pose가 수신되고 있는지 확인 (최근 0.5초 이내)
+                    bool slam_running = slam_pose_received_ && (time_since_last_pose < 0.5);
+
+                    // SLAM 시작 후 2초 대기 또는 SLAM이 실행 중임을 확인
+                    if (slam_running && elapsed_time >= 1.0)
+                    {
+                        RCLCPP_INFO(
+                            this->get_logger(),
+                            "Mission 3 complete: SLAM Toolbox running confirmed (%.1fs elapsed, pose: x=%.3f, y=%.3f)",
+                            elapsed_time, slam_pose_.x, slam_pose_.y);
+
+                        // 다음 미션으로 전환하기 전 플래그 리셋
+                        mission_position_sent_[3] = false;
+                        slam_command_sent = false;
+
+                        transitionToNextMission(4);
+                    }
+                    else if (elapsed_time >= 3.0)
+                    {
+                        // 3초 경과했는데도 SLAM pose가 수신되지 않으면 경고하고 진행
+                        RCLCPP_WARN(this->get_logger(),
+                                    "Mission 3: SLAM pose not received after %.1fs - proceeding anyway", elapsed_time);
+
+                        mission_position_sent_[3] = false;
+                        slam_command_sent = false;
+
+                        transitionToNextMission(4);
+                    }
+                    else
+                    {
+                        if (slam_running)
+                        {
+                            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 200,
+                                                 "Mission 3: SLAM running, waiting... %.1fs / 1.0s", elapsed_time);
+                        }
+                        else
+                        {
+                            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 200,
+                                                 "Mission 3: Waiting for SLAM to start... %.1fs (max 3.0s)",
+                                                 elapsed_time);
+                        }
+                    }
+                }
                 break;
             }
 
@@ -554,7 +707,7 @@ class MissionControlNode : public rclcpp::Node
                 // 장애물 감지 여부 카운팅 (연속 검출 확인)
                 const int REQUIRED_COUNT = 5; // 연속 5회 검출 필요
 
-                if (!obstacle_detected_ || obstacle_distance_ > 1.8)
+                if (!obstacle_detected_ || obstacle_distance_ > 2.0)
                 {
                     // 장애물 없음으로 판단
                     mission4_no_obstacle_count_++;
@@ -595,7 +748,7 @@ class MissionControlNode : public rclcpp::Node
                         RCLCPP_INFO(this->get_logger(),
                                     "Mission 4: Obstacle confirmed (distance=%.2fm) - Avoiding with yaw -30°",
                                     obstacle_distance_);
-                        transitionToNextMission(10);
+                        transitionToNextMission(10); // 장애물 있으면 10번 우회전으로 코스 선택
                     }
                 }
                 break;
@@ -608,18 +761,19 @@ class MissionControlNode : public rclcpp::Node
 
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision-based lane control
+                publishVisionXteOffset(0.0);      // Vision offset 0 (중앙)
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission5_position_sent_)
+                if (!mission_position_sent_[5])
                 {
-                    mission5_start_position_mm_ = encoder_position_mm_;
-                    mission5_position_sent_ = true;
+                    mission_start_position_mm_[5] = encoder_position_mm_;
+                    mission_position_sent_[5] = true;
                     RCLCPP_INFO(this->get_logger(), "Mission 5 started at position: %.1fmm with vision lane control",
                                 encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission5_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[5];
 
                 // 목표: 1400mm (1.4m) 이동
                 if (traveled_distance < 1400.0)
@@ -631,9 +785,10 @@ class MissionControlNode : public rclcpp::Node
                     publishSpeedReal(0);
                     publishLaneControl(false);
                     publishControlMode(STOP);
+                    publishVisionXteOffset(0.0); // Reset vision offset
                     RCLCPP_INFO(this->get_logger(), "Mission 5 complete: Traveled %.1fmm with lane control",
                                 traveled_distance);
-                    mission5_position_sent_ = false;
+                    mission_position_sent_[5] = false;
                     transitionToNextMission(6); // Mission 6으로 전환 (정지 및 엔코더 리셋)
                 }
 
@@ -712,15 +867,15 @@ class MissionControlNode : public rclcpp::Node
                 publishControlMode(LANE_CONTROL); // Vision-based lane control
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission7_position_sent_)
+                if (!mission_position_sent_[7])
                 {
-                    mission7_start_position_mm_ = encoder_position_mm_;
-                    mission7_position_sent_ = true;
+                    mission_start_position_mm_[7] = encoder_position_mm_;
+                    mission_position_sent_[7] = true;
                     RCLCPP_INFO(this->get_logger(), "Mission 7 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission7_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[7];
 
                 // 목표: 2000mm (2m) 이동
                 if (traveled_distance < 2600.0)
@@ -733,11 +888,12 @@ class MissionControlNode : public rclcpp::Node
                     publishSpeedReal(0);
                     publishLaneControl(false);
                     publishControlMode(STOP);
+                    publishVisionXteOffset(0.0); // Reset vision offset
 
                     RCLCPP_INFO(this->get_logger(), "Mission 7 complete: Traveled %.1fmm with lane control",
                                 traveled_distance);
-                    mission7_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(8);      // Mission 100로 전환
+                    mission_position_sent_[7] = false; // Reset for next time
+                    transitionToNextMission(8);        // Mission 100로 전환
                 }
 
                 // 진행 상황 모니터링
@@ -748,7 +904,7 @@ class MissionControlNode : public rclcpp::Node
 
             case 8:
             {
-                // 조향각 17도로 50cm 주행 후 정지
+                // 미션 8: 조향각 17도로 50cm 주행 후 정지
                 RCLCPP_INFO_ONCE(this->get_logger(), "Mission 8: Moving 50cm with steering angle 17 degrees");
 
                 publishLaneControl(false);
@@ -756,15 +912,15 @@ class MissionControlNode : public rclcpp::Node
                 publishSteerInput(-20);            // 조향각 17도
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission8_position_sent_)
+                if (!mission_position_sent_[8])
                 {
-                    mission8_start_position_mm_ = encoder_position_mm_;
-                    mission8_position_sent_ = true;
+                    mission_start_position_mm_[8] = encoder_position_mm_;
+                    mission_position_sent_[8] = true;
                     RCLCPP_INFO(this->get_logger(), "Mission 8 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission8_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[8];
 
                 // 목표: 500mm (50cm) 이동
                 if (traveled_distance < 1000.0)
@@ -778,148 +934,259 @@ class MissionControlNode : public rclcpp::Node
                     publishSteerInput(0); // 조향각 17도
                     publishControlMode(STOP);
 
-                    RCLCPP_INFO(this->get_logger(), "Mission 12 complete: Traveled %.1fmm with 17° steering",
+                    RCLCPP_INFO(this->get_logger(), "Mission 8 complete: Traveled %.1fmm with 17° steering",
                                 traveled_distance);
-                    mission8_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(100);    // Mission 15로 전환
+                    mission_position_sent_[8] = false; // Reset for next time
+                    transitionToNextMission(100);      // Mission 100으로 전환
                 }
 
                 // 진행 상황 모니터링
                 RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 12: Traveled %.1f/500.0 mm with 17° steering", traveled_distance);
+                                     "Mission 8: Traveled %.1f/500.0 mm with 17° steering", traveled_distance);
                 break;
             }
 
             case 10:
             {
-                // 0.05m/s (50mm/s) 속도로 10cm 전진 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 3: Moving 10cm forward at 50 mm/s");
+                // 미션 10: SLAM pose 기준 목표 위치(0.860, -0.985)로 이동, base_link 기준 판단
+                RCLCPP_INFO_ONCE(this->get_logger(),
+                                 "Mission 10: Moving to target SLAM pose (x=0.860m, y=-0.985m) using base_link frame");
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteerInput(15);             // Use /xte/steer for STEER_CONTROL mode (straight)
+                publishSteerInput(19);             // 직진 조향
 
-                // 시작 위치 저장 (한 번만)
-                if (!mission3_position_sent_)
+                // 목표 위치 (map frame)
+                const double target_x = 0.713;          // meters
+                const double target_y = -0.92;          // meters
+                const double position_tolerance = 0.10; // 10cm = 0.1m
+
+                // Map frame에서의 거리 계산
+                double dx_map = slam_pose_.x - target_x;
+                double dy_map = slam_pose_.y - target_y;
+                double distance_to_target = std::sqrt(dx_map * dx_map + dy_map * dy_map);
+
+                // 목표를 base_link 좌표계로 변환
+                bool target_reached = false;
+                double target_x_baselink = 0.0;
+                double target_y_baselink = 0.0;
+
+                if (transformPointToBaseLink(target_x, target_y, target_x_baselink, target_y_baselink))
                 {
-                    mission3_start_position_mm_ = encoder_position_mm_;
-                    mission3_position_sent_ = true;
-
-                    RCLCPP_INFO(this->get_logger(), "Mission 3 started at position: %.1fmm", encoder_position_mm_);
-                }
-
-                // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission3_start_position_mm_;
-
-                // 목표: 100mm (10cm) 이동
-                if (traveled_distance < 1500.0)
-                {
-                    // 아직 목표 거리에 도달하지 않음 - 속도 50mm/s로 전진
-                    publishSpeedReal(280); // 50mm/s = 0.05m/s
+                    // 판단 로직: 목표가 뒤에 있거나(x < 0) 충분히 가까우면 정지
+                    if (target_x_baselink < -position_tolerance)
+                    {
+                        // 목표를 지나침 (목표가 뒤에 있음)
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 10: Target passed (behind vehicle)");
+                    }
+                    else if (target_x_baselink >= -position_tolerance && target_x_baselink <= position_tolerance &&
+                             std::fabs(target_y_baselink) <= position_tolerance)
+                    {
+                        // 목표가 tolerance 범위 내에 있음
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 10: Target reached (within tolerance)");
+                    }
                 }
                 else
                 {
-                    // 목표 거리 도달 - 정지
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                                         "Mission 10: Could not transform target to base_link");
+                }
+
+                if (!target_reached)
+                {
+                    // 아직 목표에 도달하지 않음 - 계속 전진
+                    publishSpeedReal(280); // 280mm/s
+
+                    // 진행 상황 모니터링
+                    RCLCPP_INFO_THROTTLE(
+                        this->get_logger(), *this->get_clock(), 500,
+                        "Mission 10: Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f) | Dist: %.3fm | "
+                        "Target(base_link): (%.3f, %.3f)",
+                        target_x, target_y, slam_pose_.x, slam_pose_.y, distance_to_target, target_x_baselink,
+                        target_y_baselink);
+                }
+                else
+                {
+                    // 목표 위치 도달 - 정지
                     publishSteerInput(0);
                     publishSpeedReal(0);
 
-                    RCLCPP_INFO(this->get_logger(), "Mission 3 complete: Traveled %.1fmm, final position: %.1fmm",
-                                traveled_distance, encoder_position_mm_);
-                    mission3_position_sent_ = false; // Reset for next time
+                    RCLCPP_INFO(this->get_logger(), "Mission 10 complete!");
+                    RCLCPP_INFO(this->get_logger(), "Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f)", target_x,
+                                target_y, slam_pose_.x, slam_pose_.y);
+                    RCLCPP_INFO(this->get_logger(), "Target(base_link): x=%.3fm, y=%.3fm", target_x_baselink,
+                                target_y_baselink);
+                    RCLCPP_INFO(this->get_logger(), "Map distance: %.3fm", distance_to_target);
+
+                    mission_position_sent_[10] = false; // Reset for next time
                     transitionToNextMission(11);
                 }
-
-                // 진행 상황 모니터링
-                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 3: Traveled %.1f/100.0 mm, speed: %.1f mm/s", traveled_distance,
-                                     encoder_speed_mms_);
                 break;
             }
 
             case 11:
             {
-                // Mission 5 or 6 완료 후 비전 레인 제어로 50cm 주행
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 7: Lane following with vision control for 50cm");
+                // 미션 11: SLAM pose 기준 목표 위치(1.531, -1.727)로 이동, base_link 기준 판단
+                RCLCPP_INFO_ONCE(this->get_logger(),
+                                 "Mission 11: Moving to target SLAM pose (x=1.531m, y=-1.727m) using base_link frame");
 
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision-based lane control
                 publishSpeedReal(350);            // 주행 속도 설정
-                // 시작 위치 저장 (한 번만)
-                if (!mission7_position_sent_)
-                {
-                    mission7_start_position_mm_ = encoder_position_mm_;
-                    mission7_position_sent_ = true;
-                    RCLCPP_INFO(this->get_logger(), "Mission 7 started at position: %.1fmm", encoder_position_mm_);
-                }
+                publishVisionXteOffset(-50.0);    // Vision offset -50 (왼쪽으로 치우치게)
 
-                // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission7_start_position_mm_;
+                // 목표 위치 (map frame) x=1.173, y=-1.905,
+                const double target_x = 1.173;         // meters
+                const double target_y = -1.90;         // meters
+                const double position_tolerance = 0.1; // 10cm = 0.1m
 
-                // 목표: 500mm (50cm) 이동
-                if (traveled_distance < 1000.0)
+                // Map frame에서의 거리 계산
+                double dx_map = slam_pose_.x - target_x;
+                double dy_map = slam_pose_.y - target_y;
+                double distance_to_target = std::sqrt(dx_map * dx_map + dy_map * dy_map);
+
+                // 목표를 base_link 좌표계로 변환
+                bool target_reached = false;
+                double target_x_baselink = 0.0;
+                double target_y_baselink = 0.0;
+
+                if (transformPointToBaseLink(target_x, target_y, target_x_baselink, target_y_baselink))
                 {
-                    publishSpeedReal(350); // 주행 속도 설정
+                    // 판단 로직: 목표가 뒤에 있거나(x < 0) 충분히 가까우면 정지
+                    if (target_x_baselink < -position_tolerance)
+                    {
+                        // 목표를 지나침 (목표가 뒤에 있음)
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 11: Target passed (behind vehicle)");
+                    }
+                    else if (target_x_baselink >= -position_tolerance && target_x_baselink <= position_tolerance &&
+                             std::fabs(target_y_baselink) <= position_tolerance)
+                    {
+                        // 목표가 tolerance 범위 내에 있음
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 11: Target reached (within tolerance)");
+                    }
                 }
                 else
                 {
-                    // 목표 거리 도달 - 정지
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                                         "Mission 11: Could not transform target to base_link");
+                }
+
+                if (!target_reached)
+                {
+                    // 아직 목표에 도달하지 않음 - 계속 전진
+                    publishSpeedReal(350); // 350mm/s
+
+                    // 진행 상황 모니터링
+                    RCLCPP_INFO_THROTTLE(
+                        this->get_logger(), *this->get_clock(), 500,
+                        "Mission 11: Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f) | Dist: %.3fm | "
+                        "Target(base_link): (%.3f, %.3f)",
+                        target_x, target_y, slam_pose_.x, slam_pose_.y, distance_to_target, target_x_baselink,
+                        target_y_baselink);
+                }
+                else
+                {
+                    // 목표 위치 도달 - 정지
                     publishSpeedReal(0);
                     publishLaneControl(false);
                     publishControlMode(STOP);
+                    publishVisionXteOffset(0.0); // Reset vision offset
 
-                    RCLCPP_INFO(this->get_logger(), "Mission 7 complete: Traveled %.1fmm with lane control",
-                                traveled_distance);
-                    mission7_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(12);     // 최종 정지
+                    RCLCPP_INFO(this->get_logger(), "Mission 11 complete!");
+                    RCLCPP_INFO(this->get_logger(), "Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f)", target_x,
+                                target_y, slam_pose_.x, slam_pose_.y);
+                    RCLCPP_INFO(this->get_logger(), "Target(base_link): x=%.3fm, y=%.3fm", target_x_baselink,
+                                target_y_baselink);
+                    RCLCPP_INFO(this->get_logger(), "Map distance: %.3fm", distance_to_target);
+
+                    mission_position_sent_[11] = false; // Reset for next time
+                    transitionToNextMission(12);        // Mission 100으로 전환
                 }
-
-                // 진행 상황 모니터링
-                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 7: Traveled %.1f/500.0 mm with vision lane control", traveled_distance);
                 break;
             }
 
             case 12:
             {
-                // 조향각 17도로 50cm 주행 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 8: Moving 50cm with steering angle 17 degrees");
+                // 미션 12: SLAM pose 기준 목표 위치(x=1.489, y=-2.536)로 이동, base_link 기준 판단
+                RCLCPP_INFO_ONCE(this->get_logger(),
+                                 "Mission 12: Moving to target SLAM pose (x=1.489m, y=-2.536m) using base_link frame");
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteerInput(15);             // 조향각 17도
+                publishSteerInput(13);             // 조향각 15도
 
-                // 시작 위치 저장 (한 번만)
-                if (!mission8_position_sent_)
+                // 목표 위치 (map frame)
+                const double target_x = 1.489;          // meters
+                const double target_y = -2.536;         // meters
+                const double position_tolerance = 0.10; // 10cm = 0.1m
+
+                // Map frame에서의 거리 계산
+                double dx_map = slam_pose_.x - target_x;
+                double dy_map = slam_pose_.y - target_y;
+                double distance_to_target = std::sqrt(dx_map * dx_map + dy_map * dy_map);
+
+                // 목표를 base_link 좌표계로 변환
+                bool target_reached = false;
+                double target_x_baselink = 0.0;
+                double target_y_baselink = 0.0;
+
+                if (transformPointToBaseLink(target_x, target_y, target_x_baselink, target_y_baselink))
                 {
-                    mission8_start_position_mm_ = encoder_position_mm_;
-                    mission8_position_sent_ = true;
-                    RCLCPP_INFO(this->get_logger(), "Mission 8 started at position: %.1fmm", encoder_position_mm_);
-                }
-
-                // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission8_start_position_mm_;
-
-                // 목표: 500mm (50cm) 이동
-                if (traveled_distance < 500.0)
-                {
-                    publishSpeedReal(200); // 주행 속도
+                    // 판단 로직: 목표가 뒤에 있거나(x < 0) 충분히 가까우면 정지
+                    if (target_x_baselink < -position_tolerance)
+                    {
+                        // 목표를 지나침 (목표가 뒤에 있음)
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 12: Target passed (behind vehicle)");
+                    }
+                    else if (target_x_baselink >= -position_tolerance && target_x_baselink <= position_tolerance &&
+                             std::fabs(target_y_baselink) <= position_tolerance)
+                    {
+                        // 목표가 tolerance 범위 내에 있음
+                        target_reached = true;
+                        RCLCPP_INFO(this->get_logger(), "Mission 12: Target reached (within tolerance)");
+                    }
                 }
                 else
                 {
-                    // 목표 거리 도달 - 정지
-                    publishSpeedReal(0);
-                    publishSteerInput(0); // 조향각 17도
-                    publishControlMode(STOP);
-
-                    RCLCPP_INFO(this->get_logger(), "Mission 12 complete: Traveled %.1fmm with 17° steering",
-                                traveled_distance);
-                    mission8_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(15);     // Mission 15로 전환
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+                                         "Mission 12: Could not transform target to base_link");
                 }
 
-                // 진행 상황 모니터링
-                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 12: Traveled %.1f/500.0 mm with 17° steering", traveled_distance);
+                if (!target_reached)
+                {
+                    // 아직 목표에 도달하지 않음 - 계속 전진
+                    publishSpeedReal(200); // 200mm/s
+
+                    // 진행 상황 모니터링
+                    RCLCPP_INFO_THROTTLE(
+                        this->get_logger(), *this->get_clock(), 500,
+                        "Mission 12: Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f) | Dist: %.3fm | "
+                        "Target(base_link): (%.3f, %.3f)",
+                        target_x, target_y, slam_pose_.x, slam_pose_.y, distance_to_target, target_x_baselink,
+                        target_y_baselink);
+                }
+                else
+                {
+                    // 목표 위치 도달 - 정지
+                    publishSteerInput(0);
+                    publishSpeedReal(0);
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 12 complete!");
+                    RCLCPP_INFO(this->get_logger(), "Target(map): (%.3f, %.3f) | Current(map): (%.3f, %.3f)", target_x,
+                                target_y, slam_pose_.x, slam_pose_.y);
+                    RCLCPP_INFO(this->get_logger(), "Target(base_link): x=%.3fm, y=%.3fm", target_x_baselink,
+                                target_y_baselink);
+                    RCLCPP_INFO(this->get_logger(), "Map distance: %.3fm", distance_to_target);
+
+                    mission_position_sent_[12] = false; // Reset for next time
+                    transitionToNextMission(15);        // Mission 15로 전환
+                }
                 break;
             }
 
@@ -930,20 +1197,51 @@ class MissionControlNode : public rclcpp::Node
 
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision-based lane control
-                publishSpeedReal(350);            // 주행 속도 설정
 
                 // 시작 위치 저장 및 정지선 데이터 초기화 (한 번만)
-                if (!mission15_position_sent_)
+                if (!mission_position_sent_[15])
                 {
-                    mission15_start_position_mm_ = encoder_position_mm_;
-                    mission15_position_sent_ = true;
+                    mission_start_position_mm_[15] = encoder_position_mm_;
+                    mission_position_sent_[15] = true;
                     stop_line_position_ = 0.0; // 이전 정지선 데이터 초기화
                     RCLCPP_INFO(this->get_logger(), "Mission 15 started at position: %.1fmm, stop line data reset",
                                 encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission15_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[15];
+
+                // Vision offset 조절: 1500mm까지는 -80, 그 이후는 0
+                if (traveled_distance < 1500.0)
+                {
+                    publishVisionXteOffset(-97.0); // 왼쪽으로 치우치게
+                }
+                else
+                {
+                    publishVisionXteOffset(0.0); // 중앙으로
+                }
+
+                // 속도 제어: 2500mm 이후에는 장애물 거리에 따라 속도 조절
+                if (traveled_distance < 2500.0)
+                {
+                    publishSpeedReal(300); // 기본 주행 속도
+                }
+                else
+                {
+                    // 2500mm 이후: 장애물이 0.7m 이내에 있으면 정지, 아니면 속도 유지
+                    if (obstacle_distance_ < 0.4 && obstacle_distance_ > 0.0)
+                    {
+                        publishSpeedReal(0); // 정지
+                        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                             "Mission 15: Obstacle detected at %.2fm - Speed 0", obstacle_distance_);
+                    }
+                    else
+                    {
+                        publishSpeedReal(300); // 속도 유지
+                        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                             "Mission 15: No obstacle (%.2fm) - Speed 300", obstacle_distance_);
+                    }
+                }
 
                 // 최소 2000mm (2m) 주행 전에는 정지선 검출 무시
                 if (traveled_distance < 2000.0)
@@ -962,8 +1260,13 @@ class MissionControlNode : public rclcpp::Node
                         publishLaneControl(false);
                         publishControlMode(STOP);
                         publishSpeedReal(0);
-                        mission15_position_sent_ = false; // Reset for next time
-                        transitionToNextMission(100);     // 최종 정지
+
+                        // SLAM Toolbox 중지
+                        slamToolboxStop();
+                        RCLCPP_INFO(this->get_logger(), "Mission 15: SLAM Toolbox stopped");
+
+                        mission_position_sent_[15] = false; // Reset for next time
+                        transitionToNextMission(100);       // 최종 정지
                     }
                     else
                     {
@@ -975,6 +1278,7 @@ class MissionControlNode : public rclcpp::Node
                 break;
             }
 
+            ////////////////////////////////////////////////// 추월구간 /////////////////////////////////////////////
             case 20: // 자세 제어 벽과 일치하게 각도 유지
 
                 break;
@@ -989,15 +1293,15 @@ class MissionControlNode : public rclcpp::Node
                 publishSteerInput(20);             // 조향각 20도
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission21_position_sent_)
+                if (!mission_position_sent_[21])
                 {
-                    mission21_start_position_mm_ = encoder_position_mm_;
-                    mission21_position_sent_ = true;
+                    mission_start_position_mm_[21] = encoder_position_mm_;
+                    mission_position_sent_[21] = true;
                     RCLCPP_INFO(this->get_logger(), "Mission 21 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission21_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[21];
 
                 // 목표: 300mm (30cm) 이동
                 if (traveled_distance < 500.0)
@@ -1013,8 +1317,8 @@ class MissionControlNode : public rclcpp::Node
 
                     RCLCPP_INFO(this->get_logger(), "Mission 21 complete: Traveled %.1fmm with 20° steering",
                                 traveled_distance);
-                    mission21_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(22);      // 최종 정지
+                    mission_position_sent_[21] = false; // Reset for next time
+                    transitionToNextMission(22);        // 최종 정지
                 }
 
                 // 진행 상황 모니터링
@@ -1025,60 +1329,62 @@ class MissionControlNode : public rclcpp::Node
 
             case 22:
             {
-                // 조향각 20도로 30cm 주행 후 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 21: Moving 30cm with steering angle 20 degrees");
+                // 미션 22: 조향각 -25도로 60cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 22: Moving 60cm with steering angle -25 degrees");
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteerInput(-25);            // 조향각 20도
+                publishSteerInput(-25);            // 조향각 -25도
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission21_position_sent_)
+                if (!mission_position_sent_[22])
                 {
-                    mission21_start_position_mm_ = encoder_position_mm_;
-                    mission21_position_sent_ = true;
-                    RCLCPP_INFO(this->get_logger(), "Mission 21 started at position: %.1fmm", encoder_position_mm_);
+                    mission_start_position_mm_[22] = encoder_position_mm_;
+                    mission_position_sent_[22] = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 22 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission21_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[22];
 
-                // 목표: 300mm (30cm) 이동
-                if (traveled_distance < 500.0)
+                // 목표: 600mm (60cm) 이동
+                if (traveled_distance < 600.0)
                 {
-                    publishSpeedReal(150); // 주행 속도 200mm/s
+                    publishSpeedReal(150); // 주행 속도 150mm/s
                 }
                 else
                 {
                     // 목표 거리 도달 - 정지
                     publishSpeedReal(0);
-                    publishSteerInput(20); // 조향각 20도
+                    publishSteerInput(20);
                     publishControlMode(STOP);
 
-                    RCLCPP_INFO(this->get_logger(), "Mission 21 complete: Traveled %.1fmm with 20° steering",
+                    RCLCPP_INFO(this->get_logger(), "Mission 22 complete: Traveled %.1fmm with -25° steering",
                                 traveled_distance);
-                    mission21_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(23);      // 최종 정지
+                    mission_position_sent_[22] = false; // Reset for next time
+                    transitionToNextMission(23);        // Mission 23으로 전환
                 }
 
                 // 진행 상황 모니터링
                 RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                                     "Mission 21: Traveled %.1f/300.0 mm with 20° steering", traveled_distance);
+                                     "Mission 22: Traveled %.1f/600.0 mm with -25° steering", traveled_distance);
                 break;
             }
 
             case 23:
             {
-                // 라이다 장애물 50cm 앞에서 정지
-                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 23: Lane following until obstacle at 50cm");
+                // 라이다 장애물 50cm 앞에서 정지 (왼쪽으로 치우치게 offset -50)
+                RCLCPP_INFO_ONCE(this->get_logger(),
+                                 "Mission 23: Lane following until obstacle at 50cm with left offset");
 
                 publishLaneControl(true);
                 publishControlMode(LANE_CONTROL); // Vision-based lane control
+                publishVisionXteOffset(-100.0);   // 왼쪽으로 50px 치우치게
 
                 // 장애물까지 거리가 50cm(0.5m)보다 크면 주행
-                if (obstacle_distance_ > 0.6)
+                if (obstacle_distance_ > 0.7)
                 {
-                    publishSpeedReal(250); // 주행 속도 설정
+                    publishSpeedReal(200); // 주행 속도 설정
                     RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
                                          "Mission 23: Obstacle distance %.2fm, continuing", obstacle_distance_);
                 }
@@ -1088,12 +1394,12 @@ class MissionControlNode : public rclcpp::Node
                     publishSpeedReal(0);
                     publishLaneControl(false);
                     publishControlMode(STOP);
+                    publishVisionXteOffset(0.0); // Offset을 0으로 복귀
 
                     RCLCPP_INFO(this->get_logger(), "Mission 23 complete: Stopped at obstacle distance %.2fm",
                                 obstacle_distance_);
-                    transitionToNextMission(24); // 최종 정지
+                    transitionToNextMission(24);
                 }
-
                 break;
             }
 
@@ -1107,18 +1413,18 @@ class MissionControlNode : public rclcpp::Node
                 publishSteerInput(-35);            // 조향각 -35도
 
                 // 시작 위치 저장 (한 번만)
-                if (!mission24_position_sent_)
+                if (!mission_position_sent_[24])
                 {
-                    mission24_start_position_mm_ = encoder_position_mm_;
-                    mission24_position_sent_ = true;
+                    mission_start_position_mm_[24] = encoder_position_mm_;
+                    mission_position_sent_[24] = true;
                     RCLCPP_INFO(this->get_logger(), "Mission 24 started at position: %.1fmm", encoder_position_mm_);
                 }
 
                 // 현재까지 이동한 거리
-                double traveled_distance = encoder_position_mm_ - mission24_start_position_mm_;
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[24];
 
                 // 목표: 450mm (45cm) 이동
-                if (traveled_distance < 450.0)
+                if (traveled_distance < 600.0)
                 {
                     publishSpeedReal(150); // 주행 속도 150mm/s
                 }
@@ -1131,8 +1437,8 @@ class MissionControlNode : public rclcpp::Node
 
                     RCLCPP_INFO(this->get_logger(), "Mission 24 complete: Traveled %.1fmm with -35° steering",
                                 traveled_distance);
-                    mission24_position_sent_ = false; // Reset for next time
-                    transitionToNextMission(100);     // 최종 정지
+                    mission_position_sent_[24] = false; // Reset for next time
+                    transitionToNextMission(25);        // 최종 정지
                 }
 
                 // 진행 상황 모니터링
@@ -1141,7 +1447,71 @@ class MissionControlNode : public rclcpp::Node
                 break;
             }
 
+            case 25:
+            {
+                // 조향각 35도로 50cm 주행 후 정지
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 25: Moving 50cm with steering angle 35 degrees");
+
+                publishLaneControl(false);
+                publishControlMode(STEER_CONTROL); // Direct steering control mode
+                publishSteerInput(35);             // 조향각 35도
+
+                // 시작 위치 저장 (한 번만)
+                if (!mission_position_sent_[25])
+                {
+                    mission_start_position_mm_[25] = encoder_position_mm_;
+                    mission_position_sent_[25] = true;
+                    RCLCPP_INFO(this->get_logger(), "Mission 25 started at position: %.1fmm", encoder_position_mm_);
+                }
+
+                // 현재까지 이동한 거리
+                double traveled_distance = encoder_position_mm_ - mission_start_position_mm_[25];
+
+                // 목표: 500mm (50cm) 이동
+                if (traveled_distance < 370.0)
+                {
+                    publishSpeedReal(150); // 주행 속도 150mm/s
+                }
+                else
+                {
+                    // 목표 거리 도달 - 정지
+                    publishSpeedReal(0);
+                    publishSteerInput(0); // 조향각 0도로 복귀
+                    publishControlMode(STOP);
+
+                    RCLCPP_INFO(this->get_logger(), "Mission 25 complete: Traveled %.1fmm with 35° steering",
+                                traveled_distance);
+                    mission_position_sent_[25] = false; // Reset for next time
+                    transitionToNextMission(100);       // 최종 정지
+                }
+
+                // 진행 상황 모니터링
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+                                     "Mission 25: Traveled %.1f/500.0 mm with 35° steering", traveled_distance);
+                break;
+            }
+
+            ////////////////////////////////////////////////// 라이다 미로 구간
+            ////////////////////////////////////////////////
+            case 30:
+
+                break;
+
+            ////////////////////////////////////////////////// 주차 구간 /////////////////////////////////////////////
+            case 40:
+
+                break;
+
+            ////////////////////////////////////////////////// 벽 미로 구간
+            ////////////////////////////////////////////////
+            case 50:
+
+                break;
+
+            ////////////////////////////////// 정지 명령 /////////////////////////////////
             case 100:
+                RCLCPP_INFO_ONCE(this->get_logger(), "Mission 100: Vehicle stopped");
+                publishSteerInput(35); // 조향각 35도
                 publishSpeedReal(0);
                 break;
 
@@ -1172,6 +1542,39 @@ class MissionControlNode : public rclcpp::Node
         msg.data = mission_flag_;
         mission_status_pub_->publish(msg);
         RCLCPP_DEBUG(this->get_logger(), "Mission flag: %d", mission_flag_);
+    }
+
+    // Transform point from map frame to base_link frame
+    bool transformPointToBaseLink(double map_x, double map_y, double& baselink_x, double& baselink_y)
+    {
+        try
+        {
+            // Get transform from map to base_link
+            geometry_msgs::msg::TransformStamped transform_stamped =
+                tf_buffer_.lookupTransform("base_link", "map", tf2::TimePointZero);
+
+            // Create target point in map frame
+            geometry_msgs::msg::PointStamped point_map;
+            point_map.header.frame_id = "map";
+            point_map.header.stamp = this->now();
+            point_map.point.x = map_x;
+            point_map.point.y = map_y;
+            point_map.point.z = 0.0;
+
+            // Transform to base_link frame
+            geometry_msgs::msg::PointStamped point_baselink;
+            tf2::doTransform(point_map, point_baselink, transform_stamped);
+
+            baselink_x = point_baselink.point.x;
+            baselink_y = point_baselink.point.y;
+
+            return true;
+        }
+        catch (tf2::TransformException& ex)
+        {
+            RCLCPP_DEBUG(this->get_logger(), "Could not transform point to base_link: %s", ex.what());
+            return false;
+        }
     }
 
     // Check if current mission has reached the end mission flag
@@ -1230,6 +1633,14 @@ class MissionControlNode : public rclcpp::Node
         RCLCPP_DEBUG(this->get_logger(), "Steer input for STEER_CONTROL mode: %d degrees", steer_angle);
     }
 
+    void publishVisionXteOffset(float offset)
+    {
+        std_msgs::msg::Float32 msg;
+        msg.data = offset;
+        vision_xte_offset_pub_->publish(msg);
+        RCLCPP_DEBUG(this->get_logger(), "Vision XTE offset: %.1f px", offset);
+    }
+
     void publishLaneControl(bool enable)
     {
         auto msg = std_msgs::msg::Bool();
@@ -1261,6 +1672,30 @@ class MissionControlNode : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "Obstacle detection: %s", enable ? "ENABLED" : "DISABLED");
     }
 
+    void slamToolboxStart()
+    {
+        auto msg = std_msgs::msg::String();
+        msg.data = "start";
+        slam_command_pub_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "SLAM Toolbox: START command sent");
+    }
+
+    void slamToolboxStop()
+    {
+        auto msg = std_msgs::msg::String();
+        msg.data = "stop";
+        slam_command_pub_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "SLAM Toolbox: STOP command sent");
+    }
+
+    void slamToolboxReset()
+    {
+        auto msg = std_msgs::msg::String();
+        msg.data = "reset";
+        slam_command_pub_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "SLAM Toolbox: RESET command sent (map and position cleared)");
+    }
+
     // ==================== Parameters ====================
 
     // ==================== Sensor Data ====================
@@ -1270,6 +1705,11 @@ class MissionControlNode : public rclcpp::Node
     bool lane_status_left_;                // Left lane obstacle status (false = CLEAR, true = BLOCKED)
     bool lane_status_center_;              // Center lane obstacle status (false = CLEAR, true = BLOCKED)
     bool lane_status_right_;               // Right lane obstacle status (false = CLEAR, true = BLOCKED)
+
+    // SLAM Toolbox pose data (map frame)
+    SlamPose slam_pose_;                 // SLAM pose in map frame (x, y, yaw_rad)
+    rclcpp::Time slam_pose_last_update_; // 마지막 SLAM pose 업데이트 시간
+    bool slam_pose_received_;            // SLAM pose가 한 번이라도 수신되었는지 여부
 
     // Obstacle detection data
     double obstacle_distance_; // Front obstacle distance (meters)
@@ -1285,32 +1725,20 @@ class MissionControlNode : public rclcpp::Node
     double encoder_position_mm_; // Vehicle position in millimeters (accumulated)
     double encoder_speed_mms_;   // Vehicle speed in mm/s
 
-    // Mission 3 control data
-    double mission3_start_position_mm_; // Starting position for mission 3
-    bool mission3_position_sent_;       // Flag to track if position command was sent
-    bool encoder_reset_requested_;      // Flag to track if encoder reset was requested
+    // Mission control data - using arrays for scalability
+    std::array<double, 100> mission_start_position_mm_; // Starting positions for all missions
+    std::array<bool, 100> mission_position_sent_;       // Flags to track if position command was sent
+    bool encoder_reset_requested_;                      // Flag to track if encoder reset was requested
 
-    // Mission 4, 5, 6 control data
-    double mission4_saved_angle_;        // Saved IMU angle at mission 4 (reference angle)
-    bool mission4_angle_saved_;          // Flag to track if angle was saved
-    int mission4_no_obstacle_count_;     // Counter for consecutive "no obstacle" detections
-    int mission4_obstacle_count_;        // Counter for consecutive "obstacle" detections
-    rclcpp::Time mission4_start_time_;   // Mission 4 start time for minimum wait period
-    double mission5_start_position_mm_;  // Starting position for mission 5
-    bool mission5_position_sent_;        // Flag to track if position command was sent
-    rclcpp::Time mission6_start_time_;   // Mission 6 start time for 0.5s stop
-    bool mission6_started_;              // Mission 6 started flag
-    bool mission6_encoder_reset_sent_;   // Mission 6 encoder reset sent flag
-    double mission7_start_position_mm_;  // Starting position for mission 7
-    bool mission7_position_sent_;        // Flag to track if position command was sent
-    double mission8_start_position_mm_;  // Starting position for mission 8
-    bool mission8_position_sent_;        // Flag to track if position command was sent
-    double mission15_start_position_mm_; // Starting position for mission 15
-    bool mission15_position_sent_;       // Flag to track if position command was sent
-    double mission21_start_position_mm_; // Starting position for mission 21
-    bool mission21_position_sent_;       // Flag to track if position command was sent
-    double mission24_start_position_mm_; // Starting position for mission 24
-    bool mission24_position_sent_;       // Flag to track if position command was sent
+    // Mission 4, 5, 6 specific control data
+    double mission4_saved_angle_;      // Saved IMU angle at mission 4 (reference angle)
+    bool mission4_angle_saved_;        // Flag to track if angle was saved
+    int mission4_no_obstacle_count_;   // Counter for consecutive "no obstacle" detections
+    int mission4_obstacle_count_;      // Counter for consecutive "obstacle" detections
+    rclcpp::Time mission4_start_time_; // Mission 4 start time for minimum wait period
+    rclcpp::Time mission6_start_time_; // Mission 6 start time for 0.5s stop
+    bool mission6_started_;            // Mission 6 started flag
+    bool mission6_encoder_reset_sent_; // Mission 6 encoder reset sent flag
 
     // ==================== Mission Control ====================
     int mission_flag_;       // Current mission state
@@ -1322,6 +1750,7 @@ class MissionControlNode : public rclcpp::Node
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr imu_sub_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr lidar_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr camera_real_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr slam_pose_sub_;
 
     // ==================== Subscribers - Common ====================
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr run_flag_sub_;
@@ -1338,10 +1767,11 @@ class MissionControlNode : public rclcpp::Node
     rclcpp::Publisher<amap_powerpack_single_driver::msg::TargetSpeed>::SharedPtr
         car_control_speed_pub_; // Speed command (Real hardware)
     rclcpp::Publisher<amap_powerpack_single_driver::msg::SteeringAngle>::SharedPtr
-        car_control_steering_pub_;                                            // Steering angle command (direct)
-    rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr steer_input_pub_;      // Steer input for STEER_CONTROL mode
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr lane_control_flag_pub_; // Lane control enable/disable
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_angle_pub_;   // Target angle for IMU control
+        car_control_steering_pub_;                                               // Steering angle command (direct)
+    rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr steer_input_pub_;         // Steer input for STEER_CONTROL mode
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr vision_xte_offset_pub_; // Vision XTE offset
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr lane_control_flag_pub_;    // Lane control enable/disable
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr target_angle_pub_;      // Target angle for IMU control
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
         target_angular_velocity_pub_;                                       // Target angular velocity for STEER_CONTROL
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr obstacle_enable_pub_; // Obstacle detection enable/disable
@@ -1349,6 +1779,11 @@ class MissionControlNode : public rclcpp::Node
         target_position_relative_pub_;                                      // Relative position control
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr imu_offset_pub_;   // IMU angle offset
     rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr mission_status_pub_; // Mission status for GUI
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr slam_command_pub_;  // SLAM command (start/stop/reset)
+
+    // ==================== TF2 ====================
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
 
     // ==================== Timer ====================
     rclcpp::TimerBase::SharedPtr timer_; // Main control loop timer (10Hz)
