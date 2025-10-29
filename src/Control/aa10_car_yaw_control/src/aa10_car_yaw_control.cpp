@@ -8,7 +8,10 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "amap_powerpack_single_driver/msg/steering_angle.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 
 #include <math.h>
 #include <iostream>
@@ -24,6 +27,7 @@
 #define LANE_CONTROL 1
 #define MAZE_CONTROL 2
 #define STEER_CONTROL 3
+#define LIDAR_CONTROL 4
 
 using namespace std;
 
@@ -44,6 +48,10 @@ double Kp_maze = 0.01;
 double Kd_maze = 0.04;
 double Ki_maze = 0.00;
 
+double Kp_lidar = 0.01;
+double Kd_lidar = 0.04;
+double Ki_lidar = 0.00;
+
 double error_imu_degree = 0.0;
 double error_imu_degree_old = 0.0;
 
@@ -55,7 +63,13 @@ double error_maze = 0.0;
 double error_maze_old = 0.0;
 double error_maze_sum = 0.0;
 
+double error_lidar = 0.0;
+double error_lidar_old = 0.0;
+double error_lidar_sum = 0.0;
+
 double imu_heading_anlge_degree = 0.0;
+double slam_pose_yaw_degree = 0.0;
+double target_slam_yaw_degree = 0.0;
 
 bool control_action_flag = 0;
 bool use_imu = false;
@@ -72,6 +86,7 @@ int steer_input = 0;
 double target_yaw_degree = 0.0;
 
 double vision_cross_track_error = 0.0;
+double vision_xte_offset = 0.0;  // Vision XTE offset for adjustment
 double maze_xte = 0.0;
 
 bool yaw_control_complete_flag = false;
@@ -91,6 +106,11 @@ void vision_cross_track_error_Callback(const std_msgs::msg::Float32::SharedPtr m
     vision_cross_track_error = msg->data;
     control_action_flag = 1;
     // printf("vision XTE received!\n");
+}
+
+void vision_xte_offset_Callback(const std_msgs::msg::Float32::SharedPtr msg)
+{
+    vision_xte_offset = msg->data;
 }
 
 void imu_yaw_degree_Callback(const std_msgs::msg::Float32::SharedPtr msg)
@@ -123,6 +143,37 @@ void maze_xte_Callback(const std_msgs::msg::Float32::SharedPtr msg)
 {
     maze_xte = msg->data;
     control_action_flag = 1;
+}
+
+void slam_pose_Callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+{
+    // Extract yaw from quaternion
+    tf2::Quaternion q(
+        msg->pose.pose.orientation.x,
+        msg->pose.pose.orientation.y,
+        msg->pose.pose.orientation.z,
+        msg->pose.pose.orientation.w
+    );
+
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    // Convert to degrees
+    slam_pose_yaw_degree = RAD2DEG(yaw);
+
+    // Normalize to 0-360 range
+    if (slam_pose_yaw_degree < 0)
+    {
+        slam_pose_yaw_degree += 360.0;
+    }
+
+    control_action_flag = 1;
+}
+
+void target_slam_yaw_Callback(const std_msgs::msg::Float32::SharedPtr msg)
+{
+    target_slam_yaw_degree = msg->data;
 }
 
 double imu_control_angle_degree(void)
@@ -174,6 +225,42 @@ double maze_control_yaw(void)
     return steering_angle_control;
 }
 
+double lidar_control_yaw(void)
+{
+    double steering_angle_control = 0;
+
+    // Calculate error between target and current SLAM pose yaw
+    error_lidar = target_slam_yaw_degree - slam_pose_yaw_degree;
+
+    // Normalize error to -180 to 180 range
+    if (error_lidar > 180)
+    {
+        error_lidar = error_lidar - 360;
+    }
+    else if (error_lidar < -180)
+    {
+        error_lidar = error_lidar + 360;
+    }
+
+    double error_d = error_lidar - error_lidar_old;
+
+    steering_angle_control = Kp_lidar * error_lidar + Kd_lidar * error_d;
+
+    error_lidar_old = error_lidar;
+
+    // Limit steering angle
+    if (steering_angle_control <= -42)
+        steering_angle_control = -42;
+    if (steering_angle_control >= 42)
+        steering_angle_control = 42;
+
+    printf("steering_control_mode : LIDAR_CONTROL\n");
+    printf("target_yaw : %6.3lf current_yaw : %6.3lf error : %6.3lf steer angle : %lf\n",
+           target_slam_yaw_degree, slam_pose_yaw_degree, error_lidar, steering_angle_control);
+
+    return steering_angle_control;
+}
+
 double control_vision_xte(void)
 {
     double steering_angle_control = 0;
@@ -181,7 +268,8 @@ double control_vision_xte(void)
     // printf("sin(%6.3lf - %6.3lf) = %6.3lf\n ", target_yaw, yaw_d, CW_flag );
     // printf("error %6.3lf  %6.3lf \n", error1, error2);
 
-    error_vision = vision_cross_track_error;
+    // Apply offset to vision XTE
+    error_vision = vision_cross_track_error + vision_xte_offset;
 
     error_vision_d = error_vision - error_vision_old;
 
@@ -216,6 +304,7 @@ int main(int argc, char** argv)
     std::string yaw_control_speed_input_topic = "/Car_Control_Cmd/Speed_Int16";
 
     std::string vision_cross_track_error_topic = "/xte/vision";
+    std::string vision_xte_offset_topic = "/xte/vision_offset";
     std::string maze_xte_topic = "/xte/maze";
     std::string steer_input_topic = "/xte/steer";
 
@@ -237,6 +326,9 @@ int main(int argc, char** argv)
     node->declare_parameter("Kp_maze", Kp_maze);
     node->declare_parameter("Kd_maze", Kd_maze);
     node->declare_parameter("Ki_maze", Ki_maze);
+    node->declare_parameter("Kp_lidar", Kp_lidar);
+    node->declare_parameter("Kd_lidar", Kd_lidar);
+    node->declare_parameter("Ki_lidar", Ki_lidar);
     node->declare_parameter("vision_xte_left_angle_max", vision_xte_left_angle_max);
     node->declare_parameter("vision_xte_right_angle_max", vision_xte_right_angle_max);
     node->declare_parameter("maze_left_angle_max", maze_left_angle_max);
@@ -260,6 +352,9 @@ int main(int argc, char** argv)
     node->get_parameter("Kp_maze", Kp_maze);
     node->get_parameter("Kd_maze", Kd_maze);
     node->get_parameter("Ki_maze", Ki_maze);
+    node->get_parameter("Kp_lidar", Kp_lidar);
+    node->get_parameter("Kd_lidar", Kd_lidar);
+    node->get_parameter("Ki_lidar", Ki_lidar);
     node->get_parameter("vision_xte_left_angle_max", vision_xte_left_angle_max);
     node->get_parameter("vision_xte_right_angle_max", vision_xte_right_angle_max);
     node->get_parameter("maze_left_angle_max", maze_left_angle_max);
@@ -280,10 +375,14 @@ int main(int argc, char** argv)
         node->create_subscription<std_msgs::msg::Int8>(yaw_control_mode_topic, 1, yaw_control_mode_Callback);
     auto sub_vision_cross_track_error = node->create_subscription<std_msgs::msg::Float32>(
         vision_cross_track_error_topic, 1, vision_cross_track_error_Callback);
+    auto sub_vision_xte_offset = node->create_subscription<std_msgs::msg::Float32>(
+        vision_xte_offset_topic, 1, vision_xte_offset_Callback);
     auto sub_maze_xte = node->create_subscription<std_msgs::msg::Float32>(maze_xte_topic, 1, maze_xte_Callback);
     auto sub_car_speed_input = node->create_subscription<std_msgs::msg::Int16>(yaw_control_speed_input_topic, 2,
                                                                                yaw_control_speed_input_Callback);
     auto sub_steer_input = node->create_subscription<std_msgs::msg::Int16>(steer_input_topic, 2, steer_input_Callback);
+    auto sub_slam_pose = node->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("/pose", 1, slam_pose_Callback);
+    auto sub_target_slam_yaw = node->create_subscription<std_msgs::msg::Float32>("/car_control/target_slam_yaw", 1, target_slam_yaw_Callback);
 
     auto yaw_control_steering_output_pub =
         node->create_publisher<amap_powerpack_single_driver::msg::SteeringAngle>(yaw_control_steering_output_topic, 1);
@@ -358,6 +457,15 @@ int main(int argc, char** argv)
             {
                 RCLCPP_INFO(node->get_logger(), "Steer_Control_mode");
                 steering_angle.steering_angle = steer_input;
+                yaw_control_steering_output_pub->publish(steering_angle);
+                printf("steering_angle.steering_angle : %d\n", steering_angle.steering_angle);
+            }
+
+            else if (steering_control_mode == LIDAR_CONTROL)
+            {
+                RCLCPP_INFO(node->get_logger(), "LIDAR_Control_mode");
+                pid_output = lidar_control_yaw();
+                steering_angle.steering_angle = pid_output;
                 yaw_control_steering_output_pub->publish(steering_angle);
                 printf("steering_angle.steering_angle : %d\n", steering_angle.steering_angle);
             }
