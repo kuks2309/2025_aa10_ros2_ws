@@ -13,6 +13,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(amap_powerpack_single_driver REQUIRED)
@@ -26,6 +27,7 @@ ament_target_dependencies(aa10_mission_control_node
   sensor_msgs
   geometry_msgs
   nav_msgs
+  visualization_msgs
   tf2
   tf2_geometry_msgs
   amap_powerpack_single_driver

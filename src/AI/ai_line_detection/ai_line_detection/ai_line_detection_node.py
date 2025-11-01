@@ -306,36 +306,39 @@ class AILineDetectionNode(Node):
                 # All remaining lanes are far enough apart
                 break
 
-        # Apply temporal continuity filter - prefer lines near previous positions
-        if self.prev_left_line_x is not None and self.prev_right_line_x is not None and len(lanes) >= 2:
+        # If more than 2 lanes detected, select the best pair
+        if len(lanes) > 2:
             lane_centers = [(l[0] + l[1]) // 2 for l in lanes]
 
-            # Find best match for left and right lines
-            best_left_idx = None
-            best_right_idx = None
-            best_left_dist = float('inf')
-            best_right_dist = float('inf')
+            # Expected lane spacing
+            expected_spacing = 480
 
-            for idx, center in enumerate(lane_centers):
-                # Distance to previous left line
-                left_dist = abs(center - self.prev_left_line_x)
-                if left_dist < best_left_dist and left_dist < self.search_window:
-                    best_left_dist = left_dist
-                    best_left_idx = idx
+            # Find the pair of lanes with spacing closest to expected
+            best_pair = None
+            best_spacing_diff = float('inf')
 
-                # Distance to previous right line
-                right_dist = abs(center - self.prev_right_line_x)
-                if right_dist < best_right_dist and right_dist < self.search_window:
-                    best_right_dist = right_dist
-                    best_right_idx = idx
+            for i in range(len(lanes)):
+                for j in range(i + 1, len(lanes)):
+                    spacing = abs(lane_centers[j] - lane_centers[i])
+                    spacing_diff = abs(spacing - expected_spacing)
 
-            # Filter lanes to only those near previous positions
-            if best_left_idx is not None and best_right_idx is not None and best_left_idx != best_right_idx:
-                # Keep only the two best matching lanes
-                filtered_lanes = [lanes[best_left_idx], lanes[best_right_idx]]
+                    # Valid spacing range: 200-600px
+                    if 200 <= spacing <= 600 and spacing_diff < best_spacing_diff:
+                        best_spacing_diff = spacing_diff
+                        best_pair = (i, j)
+
+            # If found a good pair, keep only those lanes
+            if best_pair is not None:
+                i, j = best_pair
+                filtered_lanes = [lanes[i], lanes[j]]
                 # Sort by x position (left to right)
                 filtered_lanes.sort(key=lambda l: (l[0] + l[1]) // 2)
                 lanes = filtered_lanes
+
+                self.get_logger().info(
+                    f'Selected best pair from {len(lane_centers)} lanes: spacing={abs(lane_centers[j] - lane_centers[i])}px',
+                    throttle_duration_sec=1.0
+                )
 
         return lanes
 
@@ -398,14 +401,20 @@ class AILineDetectionNode(Node):
         is_virtual = False
 
         if lines is not None and len(lines) > 0:
+            # Debug: log detected lines
+            self.get_logger().info(
+                f'Detected {len(lines)} line(s): {[(l[0], l[1], (l[0]+l[1])//2) for l in lines]}',
+                throttle_duration_sec=1.0
+            )
+
             if len(lines) == 1:
-                # Single line detected - offset by half of lane spacing (440px / 2 = 220px)
+                # Single line detected - offset by half of lane spacing (480px / 2 = 240px)
                 line_left, line_right = lines[0]
                 detected_line_center = (line_left + line_right) // 2
 
                 # Fixed lane spacing
-                lane_spacing = 440
-                half_spacing = 220
+                lane_spacing = 480
+                half_spacing = 240
 
                 # Determine if detected line is on left or right side using temporal continuity
                 is_left_line = False
@@ -449,15 +458,26 @@ class AILineDetectionNode(Node):
                 # Check distance between two lines
                 distance = abs(line2_center - line1_center)
 
-                # Valid lane spacing: 200-550px
+                # Debug: log line distance
+                self.get_logger().info(
+                    f'Line1 center: {line1_center}px, Line2 center: {line2_center}px, Distance: {distance}px',
+                    throttle_duration_sec=1.0
+                )
+
+                # Valid lane spacing: 200-600px
                 min_distance = 200
-                max_distance = 550
+                max_distance = 600
 
                 if min_distance <= distance <= max_distance:
                     # Valid lane boundaries - learn the spacing
                     left_line_x = min(line1_center, line2_center)
                     right_line_x = max(line1_center, line2_center)
                     self.learned_lane_spacing = distance
+
+                    self.get_logger().info(
+                        f'Valid spacing detected: {distance}px, Left: {left_line_x}px, Right: {right_line_x}px',
+                        throttle_duration_sec=1.0
+                    )
                 else:
                     # Distance not valid - use first line and create virtual
                     detected_line_center = line1_center
@@ -514,6 +534,9 @@ class AILineDetectionNode(Node):
 
             # Create lane, line, and stop_line masks (3 classes)
             lane_mask, line_mask, stop_line_mask = self.create_masks(cv_image, results)
+
+            # Store results for lane status detection
+            self.latest_results = results
 
             # Overlay masks on original image and get lane center
             overlay_image, lane_center_x = self.overlay_masks_on_image(
@@ -578,9 +601,37 @@ class AILineDetectionNode(Node):
                 )
 
             # Publish lane status (for mission control)
-            # Default: all lanes clear (no obstacle detection in this node)
+            # Detect line presence on LEFT and RIGHT sides based on YOLO confidence
             lane_status_msg = String()
-            lane_status_msg.data = "CLEAR,CLEAR,CLEAR"  # LEFT,CENTER,RIGHT
+
+            # Determine line detection status based on segmentation confidence
+            left_detected = "CLEAR"
+            right_detected = "CLEAR"
+
+            if results[0].masks is not None and results[0].boxes is not None:
+                masks = results[0].masks.data.cpu().numpy()
+                classes = results[0].boxes.cls.cpu().numpy().astype(int)
+                confidences = results[0].boxes.conf.cpu().numpy()
+                boxes = results[0].boxes.xyxy.cpu().numpy()  # Get bounding boxes
+
+                image_width = cv_image.shape[1]
+                image_center = image_width // 2
+
+                # Check each detection for line class (class 1)
+                for mask, cls, conf, box in zip(masks, classes, confidences, boxes):
+                    if cls == 1 and conf >= self.conf_threshold:  # Line class with sufficient confidence
+                        # Get center x of bounding box
+                        x1, y1, x2, y2 = box
+                        box_center_x = (x1 + x2) / 2
+
+                        # Determine if line is on left or right side
+                        if box_center_x < image_center:
+                            left_detected = "DETECTED"
+                        else:
+                            right_detected = "DETECTED"
+
+            # Format: "LEFT,RIGHT"
+            lane_status_msg.data = f"{left_detected},{right_detected}"
             self.lane_status_pub.publish(lane_status_msg)
 
             # Calculate processing time

@@ -134,6 +134,15 @@ public:
         cv::namedWindow("result", cv::WINDOW_NORMAL);
         cv::resizeWindow("result", IMG_WIDTH_LIDAR/2, IMG_HEIGHT_LIDAR/2);
 
+        // Initialize and display empty images
+        cv::Mat init_image = cv::Mat::zeros(IMG_HEIGHT_LIDAR, IMG_WIDTH_LIDAR, CV_8UC1);
+        cv::Mat init_color = cv::Mat::zeros(IMG_HEIGHT_LIDAR, IMG_WIDTH_LIDAR, CV_8UC3);
+        cv::putText(init_color, "Waiting for LiDAR data...", cv::Point(50, IMG_HEIGHT_LIDAR/2),
+                   cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 2);
+        cv::imshow("Lidar window", init_image);
+        cv::imshow("result", init_color);
+        cv::waitKey(1);
+
         RCLCPP_INFO(this->get_logger(), "LiDAR Cone Control Node Started");
         RCLCPP_INFO(this->get_logger(), "Subscribing to: %s", lidar2d_cloud_topic.c_str());
         RCLCPP_INFO(this->get_logger(), "Blob area range: [%d, %d]", min_blob_area_, max_blob_area_);
@@ -384,22 +393,46 @@ private:
             {
                 cone_left_cnt_++;
                 cone_left_pose2d_[cone_left_cnt_] = cone_pos[best_j];
+                cone_left_pose2d_[cone_left_cnt_].theta = 0.0;  // Mark as real cone
                 RCLCPP_INFO(this->get_logger(), "  -> Selected cone[%d] at (%.1f,%.1f), new cnt=%d",
                             best_j, cone_pos[best_j].x, cone_pos[best_j].y, cone_left_cnt_);
             }
         }
 
-        // Draw left cones
+
+        // Draw left cones (only if within image bounds)
         for(int i = 0 ; i <= cone_left_cnt_; i++)
         {
-            circle(image_obstacle_color_, cv::Point(cone_left_pose2d_[i].x, cone_left_pose2d_[i].y), 10, cv::Scalar(0, 255, 255), 2, 8, 0);
+            // Check if cone is within image bounds
+            if(cone_left_pose2d_[i].x >= 0 && cone_left_pose2d_[i].x < IMG_WIDTH_LIDAR &&
+               cone_left_pose2d_[i].y >= 0 && cone_left_pose2d_[i].y < IMG_HEIGHT_LIDAR)
+            {
+                if(cone_left_pose2d_[i].theta == 1.0)
+                {
+                    // Virtual cone - draw as white rectangle
+                    cv::Point p1(cone_left_pose2d_[i].x - 8, cone_left_pose2d_[i].y - 8);
+                    cv::Point p2(cone_left_pose2d_[i].x + 8, cone_left_pose2d_[i].y + 8);
+                    rectangle(image_obstacle_color_, p1, p2, cv::Scalar(255, 255, 255), 2, 8, 0);
+                }
+                else
+                {
+                    // Real cone - yellow circle
+                    circle(image_obstacle_color_, cv::Point(cone_left_pose2d_[i].x, cone_left_pose2d_[i].y), 10, cv::Scalar(0, 255, 255), 2, 8, 0);
+                }
+            }
         }
 
-        // Draw lines between consecutive left cones
+        // Draw lines between consecutive left cones (only if both points are within bounds)
         for(int i = 0 ; i <= cone_left_cnt_-1; i++)
         {
-            line(image_obstacle_color_, cv::Point(cone_left_pose2d_[i].x, cone_left_pose2d_[i].y),
-                 cv::Point(cone_left_pose2d_[i+1].x, cone_left_pose2d_[i+1].y), cv::Scalar(0, 255, 255), 2, 8, 0);
+            if(cone_left_pose2d_[i].x >= 0 && cone_left_pose2d_[i].x < IMG_WIDTH_LIDAR &&
+               cone_left_pose2d_[i].y >= 0 && cone_left_pose2d_[i].y < IMG_HEIGHT_LIDAR &&
+               cone_left_pose2d_[i+1].x >= 0 && cone_left_pose2d_[i+1].x < IMG_WIDTH_LIDAR &&
+               cone_left_pose2d_[i+1].y >= 0 && cone_left_pose2d_[i+1].y < IMG_HEIGHT_LIDAR)
+            {
+                line(image_obstacle_color_, cv::Point(cone_left_pose2d_[i].x, cone_left_pose2d_[i].y),
+                     cv::Point(cone_left_pose2d_[i+1].x, cone_left_pose2d_[i+1].y), cv::Scalar(0, 255, 255), 2, 8, 0);
+            }
         }
     }
 
@@ -438,20 +471,44 @@ private:
             {
                 cone_right_cnt_++;
                 cone_right_pose2d_[cone_right_cnt_] = cone_pos[best_j];
+                cone_right_pose2d_[cone_right_cnt_].theta = 0.0;  // Mark as real cone
             }
         }
 
-        // Draw right cones
+
+        // Draw right cones (only if within image bounds)
         for(int i = 0 ; i <= cone_right_cnt_; i++)
         {
-            circle(image_obstacle_color_, cv::Point(cone_right_pose2d_[i].x, cone_right_pose2d_[i].y), 10, cv::Scalar(255, 0, 0), 2, 8, 0);
+            // Check if cone is within image bounds
+            if(cone_right_pose2d_[i].x >= 0 && cone_right_pose2d_[i].x < IMG_WIDTH_LIDAR &&
+               cone_right_pose2d_[i].y >= 0 && cone_right_pose2d_[i].y < IMG_HEIGHT_LIDAR)
+            {
+                if(cone_right_pose2d_[i].theta == 1.0)
+                {
+                    // Virtual cone - draw as white rectangle
+                    cv::Point p1(cone_right_pose2d_[i].x - 8, cone_right_pose2d_[i].y - 8);
+                    cv::Point p2(cone_right_pose2d_[i].x + 8, cone_right_pose2d_[i].y + 8);
+                    rectangle(image_obstacle_color_, p1, p2, cv::Scalar(255, 255, 255), 2, 8, 0);
+                }
+                else
+                {
+                    // Real cone - blue circle
+                    circle(image_obstacle_color_, cv::Point(cone_right_pose2d_[i].x, cone_right_pose2d_[i].y), 10, cv::Scalar(255, 0, 0), 2, 8, 0);
+                }
+            }
         }
 
-        // Draw lines between consecutive right cones
+        // Draw lines between consecutive right cones (only if both points are within bounds)
         for(int i = 0 ; i <= cone_right_cnt_-1; i++)
         {
-            line(image_obstacle_color_, cv::Point(cone_right_pose2d_[i].x, cone_right_pose2d_[i].y),
-                 cv::Point(cone_right_pose2d_[i+1].x, cone_right_pose2d_[i+1].y), cv::Scalar(255, 0, 0), 2, 8, 0);
+            if(cone_right_pose2d_[i].x >= 0 && cone_right_pose2d_[i].x < IMG_WIDTH_LIDAR &&
+               cone_right_pose2d_[i].y >= 0 && cone_right_pose2d_[i].y < IMG_HEIGHT_LIDAR &&
+               cone_right_pose2d_[i+1].x >= 0 && cone_right_pose2d_[i+1].x < IMG_WIDTH_LIDAR &&
+               cone_right_pose2d_[i+1].y >= 0 && cone_right_pose2d_[i+1].y < IMG_HEIGHT_LIDAR)
+            {
+                line(image_obstacle_color_, cv::Point(cone_right_pose2d_[i].x, cone_right_pose2d_[i].y),
+                     cv::Point(cone_right_pose2d_[i+1].x, cone_right_pose2d_[i+1].y), cv::Scalar(255, 0, 0), 2, 8, 0);
+            }
         }
     }
 
@@ -459,9 +516,12 @@ private:
     {
         double lidar_xte = 0;
 
-        // Draw center line
+        // Draw center line (green)
         line(image_obstacle_color_, cv::Point(IMG_WIDTH_LIDAR/2, 0), cv::Point(IMG_WIDTH_LIDAR/2, IMG_HEIGHT_LIDAR),
-             cv::Scalar(147, 20, 255), 3, 8, 0);
+             cv::Scalar(0, 255, 0), 3, 8, 0);
+
+        // Draw circle at image center (bottom)
+        circle(image_obstacle_color_, cv::Point(IMG_WIDTH_LIDAR/2, IMG_HEIGHT_LIDAR), 10, cv::Scalar(0, 255, 0), -1, 8, 0);
 
         if((cnt >= 2) && (cone_pos2d_array[0].y >= IMG_HEIGHT_LIDAR * 0.7))
         {
@@ -469,12 +529,14 @@ private:
             if(cone_pos2d_array[0].x < IMG_WIDTH_LIDAR/2)
             {
                 cone_left_pose2d_[0] = cone_pos2d_array[0];
+                cone_left_pose2d_[0].theta = 0.0;  // Mark as real cone
                 cone_left_cnt_++;
                 circle(image_obstacle_color_, cv::Point(cone_left_pose2d_[0].x, cone_left_pose2d_[0].y), 10, cv::Scalar(0, 255, 255), 2, 8, 0);
             }
             else
             {
                 cone_right_pose2d_[0] = cone_pos2d_array[0];
+                cone_right_pose2d_[0].theta = 0.0;  // Mark as real cone
                 cone_right_cnt_++;
                 circle(image_obstacle_color_, cv::Point(cone_right_pose2d_[0].x, cone_right_pose2d_[0].y), 10, cv::Scalar(255, 0, 0), 2, 8, 0);
             }
@@ -483,12 +545,14 @@ private:
             if(cone_pos2d_array[1].x > IMG_WIDTH_LIDAR/2)
             {
                 cone_right_pose2d_[0] = cone_pos2d_array[1];
+                cone_right_pose2d_[0].theta = 0.0;  // Mark as real cone
                 cone_right_cnt_++;
                 circle(image_obstacle_color_, cv::Point(cone_right_pose2d_[0].x, cone_right_pose2d_[0].y), 10, cv::Scalar(255, 0, 0), 2, 8, 0);
             }
             else
             {
                 cone_left_pose2d_[0] = cone_pos2d_array[1];
+                cone_left_pose2d_[0].theta = 0.0;  // Mark as real cone
                 cone_left_cnt_++;
                 circle(image_obstacle_color_, cv::Point(cone_left_pose2d_[0].x, cone_left_pose2d_[0].y), 10, cv::Scalar(0, 255, 255), 2, 8, 0);
             }
@@ -510,6 +574,26 @@ private:
 
                     // Calculate cross-track error (using first cone pair)
                     lidar_xte = IMG_WIDTH_LIDAR/2 - (cone_left_pose2d_[0].x + cone_right_pose2d_[0].x)/2;
+
+                    // Convert XTE to meters
+                    double xte_meters = lidar_xte / image_scale_;
+
+                    // Calculate target point (midpoint between left and right cones)
+                    int target_x = (cone_left_pose2d_[0].x + cone_right_pose2d_[0].x) / 2;
+                    int target_y = (cone_left_pose2d_[0].y + cone_right_pose2d_[0].y) / 2;
+
+                    // Draw pink line from robot center to target point (showing XTE)
+                    line(image_obstacle_color_, cv::Point(IMG_WIDTH_LIDAR/2, IMG_HEIGHT_LIDAR),
+                         cv::Point(target_x, target_y), cv::Scalar(255, 0, 255), 3, 8, 0);
+
+                    // Draw circle at target point
+                    circle(image_obstacle_color_, cv::Point(target_x, target_y), 8, cv::Scalar(255, 0, 255), -1, 8, 0);
+
+                    // Display XTE text on image
+                    char xte_text[100];
+                    sprintf(xte_text, "XTE: %.3f m (%.0f px)", xte_meters, lidar_xte);
+                    cv::putText(image_obstacle_color_, xte_text, cv::Point(10, 30),
+                               cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
 
                     std_msgs::msg::Float32 xte_lidar_msg;
                     xte_lidar_msg.data = lidar_xte;
@@ -558,6 +642,12 @@ private:
         find_cone_left_pos(cone_pose2d, cnt);
         find_cone_right_pos(cone_pose2d, cnt);
 
+        // Display cone count on image
+        char cone_cnt_text[100];
+        sprintf(cone_cnt_text, "Cone Count [L:%d R:%d]", cone_left_cnt_, cone_right_cnt_);
+        cv::putText(image_obstacle_color_, cone_cnt_text, cv::Point(10, 60),
+                   cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 2);
+
         // Publish cone markers to RViz
         publish_cone_markers();
 
@@ -572,6 +662,13 @@ private:
 
     void lidar2d_pointcloud2_callback(const sensor_msgs::msg::PointCloud2::SharedPtr scan)
     {
+        static int callback_count = 0;
+        callback_count++;
+        if(callback_count % 10 == 1)
+        {
+            RCLCPP_INFO(this->get_logger(), "PointCloud2 callback received (count: %d)", callback_count);
+        }
+
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::fromROSMsg(*scan, *cloud);
 
@@ -584,6 +681,11 @@ private:
 
         pcl::PointCloud<pcl::PointXYZ> _2d_cloud;
         pcl::fromROSMsg(output, _2d_cloud);
+
+        if(callback_count % 10 == 1)
+        {
+            RCLCPP_INFO(this->get_logger(), "Point cloud size: %lu points", _2d_cloud.points.size());
+        }
 
         image_obstacle_       = cv::Mat::zeros(IMG_HEIGHT_LIDAR, IMG_WIDTH_LIDAR, CV_8UC1);
         image_obstacle_color_ = cv::Mat::zeros(IMG_HEIGHT_LIDAR, IMG_WIDTH_LIDAR, CV_8UC3);
@@ -611,8 +713,13 @@ private:
         // Detect cones
         lidar_cone_blob_detection(image_dilate_);
 
-        cv::imshow("Lidar window", image_dilate_);
-        cv::imshow("result", image_obstacle_color_);
+        // Flip images horizontally for display
+        cv::Mat image_dilate_flipped, image_result_flipped;
+        cv::flip(image_dilate_, image_dilate_flipped, 1);
+        cv::flip(image_obstacle_color_, image_result_flipped, 1);
+
+        cv::imshow("Lidar window", image_dilate_flipped);
+        cv::imshow("result", image_result_flipped);
         cv::waitKey(1);
     }
 };
