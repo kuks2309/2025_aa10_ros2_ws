@@ -1113,7 +1113,7 @@ class MissionControlNode : public rclcpp::Node
 
                 publishLaneControl(false);
                 publishControlMode(STEER_CONTROL); // Direct steering control mode
-                publishSteerInput(14);             // 조향각 15도
+                publishSteerInput(16);             // 조향각 15도
 
                 // 목표 위치 (map frame)
                 const double target_x = 1.489;          // meters
@@ -1715,8 +1715,8 @@ class MissionControlNode : public rclcpp::Node
                 double current_y = slam_pose_.y;
                 double current_y_cm = current_y * 100.0;
 
-                // 목표: Y가 0 근처 (±5cm 허용) 10으로 수정함
-                if (std::abs(current_y) <= 0.10)
+                // 목표: Y가 0 근처 (±5cm 허용) 15으로 수정함
+                if (std::abs(current_y) <= 0.15)
                 {
                     // Y = 0 도달 - 정지하고 Mission 26으로 전환
                     publishSpeedReal(0);

@@ -234,7 +234,7 @@ class AILineDetectionNode(Node):
         # Return average width of individual lines
         return int(np.mean(individual_widths))
 
-    def detect_lane_edges(self, mask, image_height):
+    def detect_lane_edges(self, mask, image_height, image_width):
         """Detect left and right edges of lane(s) at y-axis center with temporal continuity"""
         if mask is None or np.sum(mask) == 0:
             return None
@@ -296,12 +296,30 @@ class AILineDetectionNode(Node):
                     min_distance = distance
                     min_idx = i
 
-            # If the closest pair is less than 200px apart, merge them
-            if min_distance < 200:
-                # Merge lanes[min_idx] and lanes[min_idx + 1]
-                merged_lane = (lanes[min_idx][0], lanes[min_idx + 1][1])
-                new_lanes = lanes[:min_idx] + [merged_lane] + lanes[min_idx + 2:]
+            # If the closest pair is less than 300px apart, merge them
+            if min_distance < 300:
+                # When merging, select the lane closer to image center
+                image_center = image_width // 2
+                lane1_center = (lanes[min_idx][0] + lanes[min_idx][1]) // 2
+                lane2_center = (lanes[min_idx + 1][0] + lanes[min_idx + 1][1]) // 2
+
+                dist1_to_center = abs(lane1_center - image_center)
+                dist2_to_center = abs(lane2_center - image_center)
+
+                # Select the lane closer to center
+                if dist1_to_center <= dist2_to_center:
+                    selected_lane = lanes[min_idx]
+                else:
+                    selected_lane = lanes[min_idx + 1]
+
+                # Replace both lanes with the selected one
+                new_lanes = lanes[:min_idx] + [selected_lane] + lanes[min_idx + 2:]
                 lanes = new_lanes
+
+                self.get_logger().info(
+                    f'Merged close lanes at idx {min_idx}, distance={min_distance}px, selected lane center={((selected_lane[0] + selected_lane[1]) // 2)}px (closer to center)',
+                    throttle_duration_sec=1.0
+                )
             else:
                 # All remaining lanes are far enough apart
                 break
@@ -393,7 +411,7 @@ class AILineDetectionNode(Node):
         cv2.line(result, (0, y_center), (w, y_center), (128, 128, 128), 1, cv2.LINE_AA)
 
         # Detect individual lines (lane markings) - use line_mask (class 1)
-        lines = self.detect_lane_edges(line_mask, h)
+        lines = self.detect_lane_edges(line_mask, h, w)
         line_width = self.calculate_line_width(line_mask, h, lines)
 
         left_line_x = None

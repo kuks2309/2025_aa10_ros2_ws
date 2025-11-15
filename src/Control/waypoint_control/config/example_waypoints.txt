@@ -1,0 +1,10 @@
+# Example waypoint file
+# Format: x y theta (in radians)
+# Lines starting with # are comments
+
+# Square path example
+0.0 0.0 0.0
+1.0 0.0 0.0
+1.0 1.0 1.57
+0.0 1.0 3.14
+0.0 0.0 -1.57

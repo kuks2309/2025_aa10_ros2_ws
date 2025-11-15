@@ -1,0 +1,19 @@
+waypoint_follower:
+  ros__parameters:
+    # Pure Pursuit parameters
+    lookahead_distance: 0.5      # meters - distance to look ahead for target point
+    k_p: 1.0                     # proportional gain for control
+
+    # Velocity limits
+    max_linear_velocity: 0.3     # m/s - maximum forward speed
+    min_linear_velocity: 0.1     # m/s - minimum forward speed
+    max_angular_velocity: 1.0    # rad/s - maximum rotation speed
+
+    # Goal tolerance
+    goal_tolerance: 0.15         # meters - distance threshold to consider goal reached
+
+    # Robot parameters
+    wheelbase: 0.2               # meters - distance between front and rear axles
+
+    # Update rate
+    control_frequency: 20        # Hz

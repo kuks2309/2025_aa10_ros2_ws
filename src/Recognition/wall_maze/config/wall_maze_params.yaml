@@ -1,0 +1,18 @@
+wall_maze_node:
+  ros__parameters:
+    # Scan filtering parameters
+    scan_range: 3.0  # Maximum scan range in meters
+    
+    # ROI (Region of Interest) common parameters
+    roi_width: 1.0   # ROI width in meters (X direction)
+    roi_height: 1.0  # ROI height in meters (Y direction)
+    roi_min_distance: 0.1 # ROI minimum distance in meters (for filtering)
+    roi_max_distance: 3.0 # ROI maximum distance in meters (for filtering)
+    
+    # Left ROI position (center point)
+    left_roi_x: 1.0  # Left ROI center X position in meters
+    left_roi_y: 1.0  # Left ROI center Y position in meters
+    
+    # Right ROI position (center point)
+    right_roi_x: 1.0  # Right ROI center X position in meters
+    right_roi_y: -1.0 # Right ROI center Y position in meters
