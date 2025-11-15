@@ -31,6 +31,11 @@ class AILineDetectionNode(Node):
         self.prev_right_line_x = None
         self.search_window = 80  # Search within ±80 pixels of previous position
 
+        # Previous XTE and lane center for fallback when detection fails
+        self.prev_xte = 0.0
+        self.prev_lane_center_x = None
+        self.detection_failure_count = 0  # Track consecutive failures
+
         # Parameters
         self.declare_parameter('model_path', 'weights/best.pt')
         self.declare_parameter('conf_threshold', 0.3)
@@ -567,10 +572,25 @@ class AILineDetectionNode(Node):
 
             # Calculate cross-track error from lane center
             if lane_center_x is not None:
+                # Detection successful - calculate new XTE
                 image_center = cv_image.shape[1] / 2
                 xte = lane_center_x - image_center
+
+                # Save current values for fallback
+                self.prev_xte = xte
+                self.prev_lane_center_x = lane_center_x
+                self.detection_failure_count = 0
             else:
-                xte = 0.0
+                # Detection failed - use previous values to maintain steering
+                xte = self.prev_xte
+                lane_center_x = self.prev_lane_center_x
+                self.detection_failure_count += 1
+
+                self.get_logger().warn(
+                    f'Line detection failed (count: {self.detection_failure_count}), '
+                    f'maintaining previous XTE: {xte:.1f} px',
+                    throttle_duration_sec=0.5
+                )
 
             # Add FPS and XTE info to overlay image
             current_time = time.time()
